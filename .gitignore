@@ -60,10 +60,6 @@ src/frontend/playwright-report/
 src/frontend/test-results/
 src/frontend/e2e/screenshots/
 
-# LaTeX build artefacts
-deliverables/report/main.pdf
-deliverables/report/*.aux
-deliverables/report/*.log
-deliverables/report/*.out
-deliverables/report/*.toc
-deliverables/report/chapters/*.aux
+# Report sources (LaTeX, figures, screenshots, build artefacts)
+# Only the final PDF in deliverables/ is tracked.
+deliverables/report/

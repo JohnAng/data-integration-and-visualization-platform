@@ -245,6 +245,36 @@ automatically.
 
 ## Run the platform — three paths
 
+### Before you start — get the data
+
+The repository on GitHub ships with **empty data folders** because the
+raw CSVs (~722 MiB) and the MySQL backup (~172 MiB) exceed GitHub's
+100 MiB per-file limit. The orchestrator (`python run.py`) auto-detects
+what is on disk and chooses the fastest path, but you need to place at
+least one of the two archives first.
+
+| What you need | Where to put it | Result |
+|---|---|---|
+| `deliverables/db_backup.sql.gz` (~172 MiB) | `deliverables/` directly | Auto-restore on first boot (~3 min) |
+| `data/dblp_dataset/*.csv` + `data/icore26_data/*.csv` + `data/journal_ranking_data_raw/*.csv` | matching subfolders of `data/` | Full ETL pipeline runs (~5 min) |
+| Neither | — | `python run.py` exits with a banner listing the download sources |
+
+**Where to get them:**
+
+- **For evaluators**: links to both archives are in `AM2403_prj.txt`
+  (submitted via `turnin`). The txt file lists Proton Drive URLs that
+  open without a Proton account, plus the exact placement instructions
+  reproduced above.
+- **For the public**: the raw CSVs come from the original sources
+  (one-time download, no auth required):
+  - DBLP dump (article + inproceedings CSVs): <https://dblp.org/xml/release/>
+  - iCore26 conference rankings: <http://portal.core.edu.au/conf-ranks/>
+  - Kaggle Scimago journal ranking: search for *"Scimago Journal Ranking"* on Kaggle.
+
+If you place **both** the backup and the raw CSVs, `python run.py`
+prefers the backup (Path A). Use `python run.py --etl` to override and
+force the ETL path.
+
 ### Path 0 — full Docker stack (recommended)
 
 > **One command, no host-side Python / Node / uv / pnpm required.**
@@ -364,14 +394,15 @@ missing it prints the Path B commands instead.
 
 ### Path A — restore from backup (fastest, ~3 min)
 
-The backup `deliverables/db_backup.sql.gz` (≈ 160 MiB compressed) is a
+The backup `deliverables/db_backup.sql.gz` (≈ 172 MiB compressed) is a
 full `mysqldump` of the live database — schema + ~2.5M article rows +
-~1.4M author rows + views +
-materialised tables.
+~1.4M author rows + views + materialised tables.
 
-> GitHub blocks files > 100 MiB, so the backup ships in the latest
-> **GitHub Release**. If it is missing from your clone, download it
-> from the Releases page and drop it into `deliverables/`.
+> GitHub blocks files > 100 MiB. See the [Before you start — get the
+> data](#before-you-start--get-the-data) section above for where to
+> download `db_backup.sql.gz`; place it at
+> `deliverables/db_backup.sql.gz` before running any of the commands
+> below.
 
 ```powershell
 docker compose up -d
@@ -386,7 +417,9 @@ Then [run the API](#running-the-http-api) and [the frontend](#running-the-fronte
 
 ### Path B — full ETL from raw CSVs (~5 min)
 
-Use if you only have the source CSVs in `data/` (DBLP, iCore26, Kaggle).
+Use if you placed the source CSVs in `data/` (see the [Before you
+start — get the data](#before-you-start--get-the-data) section for
+download URLs and the expected subfolder layout).
 
 ```powershell
 docker compose up -d

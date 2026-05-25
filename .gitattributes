@@ -1,0 +1,22 @@
+# Force LF line endings for shell scripts and Linux-bound files.
+# Without this, Git on Windows ("core.autocrlf=true") commits CRLF, which
+# breaks the shebang inside a Linux container (`/bin/bash^M: bad interpreter`).
+
+*.sh              text eol=lf
+scripts/mysql-init.sh text eol=lf
+Dockerfile        text eol=lf
+*.Dockerfile      text eol=lf
+.dockerignore     text eol=lf
+nginx.conf        text eol=lf
+
+# Keep .ps1 with native CRLF on Windows, LF on Unix
+*.ps1             text eol=crlf
+
+# Mark binary files explicitly to avoid line-ending mangling
+*.png             binary
+*.jpg             binary
+*.pdf             binary
+*.gz              binary
+*.zip             binary
+*.mp4             binary
+*.xlsx            binary

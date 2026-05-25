@@ -1,0 +1,41 @@
+\chapter*{Ιστορικό προηγούμενων εκδόσεων}
+\addcontentsline{toc}{chapter}{Ιστορικό προηγούμενων εκδόσεων}
+
+\begin{center}
+\begin{tabular}{@{}p{0.18\textwidth} p{0.10\textwidth} p{0.46\textwidth} p{0.16\textwidth}@{}}
+\toprule
+\textbf{Ημερομηνία} & \textbf{Εκδοση} & \textbf{Περιγραφή} & \textbf{Συγγραφέας} \\
+\midrule
+2026-03-10 & 0.1 & Φάση Ι. Σχήμα βάσης, ETL transformer, scripts φόρτωσης. & Αγγελάκος \\
+2026-04-21 & 0.5 & Φάση ΙΙ. FastAPI back-end, 28 endpoints, React/Visx UI. & Αγγελάκος \\
+2026-05-22 & 0.9 & Φάση ΙΙΙ. Charts playground, ολοκληρωμένα profiles, audit. & Αγγελάκος \\
+2026-05-26 & 1.0 & Τελική αναφορά + video + deliverables. & Αγγελάκος \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\vspace{1cm}
+
+\section*{Συνοπτική περιγραφή}
+
+Η εργασία υλοποιεί μια πλατφόρμα ενοποίησης και οπτικοποίησης βιβλιογραφικών δεδομένων.
+Ενσωματώνει τρεις ετερογενείς πηγές --- το \emph{DBLP} αρχείο δημοσιεύσεων, τη βαθμολόγηση
+συνεδρίων \emph{iCore26} και τους πίνακες κατάταξης περιοδικών \emph{Kaggle Scimago} ---
+σε ένα σχεσιακό \emph{star schema} και τα εκθέτει μέσω ενός API back-end και ενός
+διαδραστικού front-end που υποστηρίζει αναλυτικές αναφορές, line/bar/scatter charts,
+καθώς και επιπρόσθετα heatmap, stacked area και cumulative growth γραφήματα.
+
+Το σύστημα τηρεί τους περιορισμούς της εκφώνησης:
+
+\begin{itemize}\setlength{\itemsep}{0.2em}
+    \item Ολη η ανάκτηση δεδομένων γίνεται με \emph{raw, parameterised SQL} μέσα στο
+          DBMS, χωρίς ORM ή SQL builder.
+    \item Η Python ασχολείται αποκλειστικά με τον ETL μετασχηματισμό· τα δεδομένα
+          φορτώνονται από τα scripts στο φάκελο \texttt{sql\_scripts/} ως
+          \texttt{LOAD DATA LOCAL INFILE}.
+    \item Ολα τα aggregations και joins είναι SQL views και CTEs.
+    \item Βαριά aggregates υλοποιούνται ως \emph{materialised tables} ώστε οι
+          αναφορές να επιστρέφονται σε milliseconds.
+\end{itemize}
+
+\clearpage

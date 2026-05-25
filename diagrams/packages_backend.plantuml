@@ -1,0 +1,100 @@
+@startuml packages_backend
+' ----------------------------------------------------------------------
+' UML package diagram of the back-end. Reflects the actual module
+' layout under src/backend (verified against the file tree, May 2026).
+' ----------------------------------------------------------------------
+!theme plain
+skinparam defaultFontName "Inter"
+skinparam shadowing false
+skinparam ArrowColor #14213D
+skinparam ArrowFontColor #5F6470
+skinparam packageStyle rectangle
+skinparam linetype ortho
+
+skinparam package {
+    BorderColor #14213D
+    BackgroundColor #F5F1E8
+    FontColor #1A1A1A
+}
+skinparam folder {
+    BorderColor #C8C0AE
+    BackgroundColor #FFFFFF
+    FontColor #1A1A1A
+}
+skinparam database {
+    BorderColor #14213D
+    BackgroundColor #C8E6C9
+    FontColor #1A1A1A
+}
+
+title src/backend — UML package diagram
+
+package "src.backend.api" as api {
+    folder "main.py" as main
+    folder "database.py" as database
+    folder "dependencies.py" as deps
+    folder "settings.py" as settings
+    folder "errors.py" as errors
+    folder "sql_helpers.py" as helpers
+
+    package "routers" as routers {
+        folder "journals.py" as r1
+        folder "conferences.py" as r2
+        folder "authors.py" as r3
+        folder "years.py" as r4
+        folder "charts.py" as r5
+        folder "meta.py" as r6
+    }
+
+    package "data_access (DAOs)" as dao {
+        folder "journal.py" as d1
+        folder "conference.py" as d2
+        folder "author.py" as d3
+        folder "year.py" as d4
+        folder "charts.py" as d5
+        folder "meta.py" as d6
+    }
+
+    package "schemas (Pydantic v2 DTOs)" as schemas {
+        folder "common.py" as s_common
+        folder "paper.py" as s_paper
+        folder "journal · conference\nauthor · year\ncharts · meta" as s_rest
+    }
+}
+
+package "src.backend.etl" as etl_pkg {
+    folder "transformer.py" as etl_t
+    folder "exporter.py" as etl_e
+}
+
+package "src.backend.database\n(CLI tools)" as db_pkg {
+    folder "db_backup.py" as bkp
+    folder "db_restore.py" as rst
+}
+
+database "MySQL 8.0\nmye030" as mysql
+
+main --> routers
+main --> errors
+routers --> dao
+routers --> schemas
+dao --> schemas
+dao --> helpers
+dao --> database
+deps --> database
+database --> settings
+database --> mysql : asyncmy pool
+
+etl_t --> etl_e
+
+bkp --> mysql : mysqldump
+rst --> mysql : restore from gzip
+
+legend bottom
+  Arrows show in-process Python imports, except for the labelled edges
+  which describe runtime interactions with MySQL.
+  schemas/ is a leaf package consumed by both routers/ and data_access/.
+  etl/ never touches MySQL directly. database/ holds stand-alone CLI scripts.
+endlegend
+
+@enduml

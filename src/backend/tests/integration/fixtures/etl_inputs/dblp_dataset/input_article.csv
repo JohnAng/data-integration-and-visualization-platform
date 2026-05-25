@@ -1,0 +1,7 @@
+id;author;journal;title;year;pages;url
+1;Alice Smith|Bob Jones;IEEE Trans. Knowl. Data Eng.;Paper One on Knowledge;2020;1-10;http://example.org/article/1
+2;Alice Smith|Charlie Brown;IEEE Trans. Knowl. Data Eng.;Paper Two on Engineering;2021;11-20;http://example.org/article/2
+3;Bob Jones|Diana White;Inf. Syst.;Article on Information Systems;2020;21-30;http://example.org/article/3
+4;Eve Black;Test Journal Without Match;Solo paper;2022;1-5;http://example.org/article/4
+5;Frank Green;;Article missing journal;2019;100-110;http://example.org/article/5
+6;;IEEE Trans. Knowl. Data Eng.;Article missing author;2020;200-210;http://example.org/article/6

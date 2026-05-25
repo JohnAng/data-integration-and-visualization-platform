@@ -1,0 +1,113 @@
+@startuml
+
+!theme plain
+top to bottom direction
+skinparam linetype ortho
+
+class view_author_profile {
+   author_id: int unsigned
+   author_name: varchar(255)
+   total_articles: bigint
+   earliest_year: smallint unsigned
+   latest_year: smallint unsigned
+   average_articles_per_year: decimal(23,2)
+}
+class view_author_yearly_statistics {
+   author_id: int unsigned
+   year: smallint unsigned
+   articles_count: bigint
+}
+class view_conference_profile {
+   conference_id: int unsigned
+   title: varchar(500)
+   acronym: varchar(50)
+   rank_value: varchar(50)
+   primary_for: varchar(10)
+   primary_for_description: varchar(255)
+   total_articles: bigint
+   earliest_year: smallint unsigned
+   latest_year: smallint unsigned
+   distinct_authors_total: bigint
+   average_articles_per_year: decimal(23,2)
+   average_authors_per_article_overall: decimal(23,2)
+}
+class view_conference_yearly_statistics {
+   conference_id: int unsigned
+   year: smallint unsigned
+   articles_count: bigint
+   distinct_authors: bigint
+   total_authors: bigint
+   average_authors_per_article: decimal(23,2)
+}
+class view_corpus_totals {
+   total_journal_articles: bigint
+   total_conference_articles: bigint
+   total_articles: bigint
+   total_authors: bigint
+   total_journals: bigint
+   total_conferences: bigint
+   earliest_year: int unsigned
+   latest_year: int unsigned
+}
+class view_field_of_research_yearly_summary {
+   primary_for: varchar(10)
+   primary_for_description: varchar(255)
+   year: smallint unsigned
+   distinct_conferences: bigint
+   articles_count: bigint
+}
+class view_journal_profile {
+   journal_id: int unsigned
+   title: varchar(500)
+   publisher: varchar(255)
+   country: varchar(100)
+   best_quartile: varchar(2)
+   best_subject_area: varchar(100)
+   sjr_index: decimal(10,3)
+   citation_score: decimal(10,2)
+   h_index: smallint unsigned
+   total_documents: int unsigned
+   total_documents_3y: int unsigned
+   total_references: int unsigned
+   total_citations_3y: int unsigned
+   citable_documents_3y: int unsigned
+   citations_per_document_2y: decimal(10,2)
+   references_per_document: decimal(10,2)
+   total_articles: bigint
+   earliest_year: smallint unsigned
+   latest_year: smallint unsigned
+   distinct_authors_total: bigint
+   average_articles_per_year: decimal(23,2)
+   average_authors_per_article_overall: decimal(23,2)
+}
+class view_journal_yearly_statistics {
+   journal_id: int unsigned
+   year: smallint unsigned
+   articles_count: bigint
+   distinct_authors: bigint
+   total_authors: bigint
+   average_authors_per_article: decimal(23,2)
+}
+class view_publisher_quartile_distribution {
+   publisher: varchar(255)
+   best_quartile: varchar(2)
+   journal_count: bigint
+}
+class view_subject_area_yearly_summary {
+   best_subject_area: varchar(100)
+   year: smallint unsigned
+   distinct_journals: bigint
+   articles_count: bigint
+}
+class view_year_summary {
+   year: smallint unsigned
+   journal_articles: bigint
+   conference_articles: bigint
+   total_articles: bigint
+   distinct_journals: bigint
+   distinct_conferences: bigint
+   distinct_authors: bigint
+   total_authors: bigint
+}
+
+@enduml

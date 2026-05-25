@@ -1,0 +1,76 @@
+@startuml deployment
+' ----------------------------------------------------------------------
+' UML deployment diagram with standard stereotypes («device»,
+' «executionEnvironment», «artifact»). Shows the runtime topology
+' on a single developer workstation plus the Docker container that
+' hosts MySQL.
+' ----------------------------------------------------------------------
+!theme plain
+skinparam defaultFontName "Inter"
+skinparam shadowing false
+skinparam ArrowColor #14213D
+skinparam ArrowFontColor #5F6470
+skinparam linetype ortho
+
+skinparam node {
+    BorderColor #14213D
+    BackgroundColor #F5F1E8
+    FontColor #1A1A1A
+}
+skinparam database {
+    BorderColor #14213D
+    BackgroundColor #C8E6C9
+    FontColor #1A1A1A
+}
+skinparam artifact {
+    BorderColor #C8C0AE
+    BackgroundColor #FFFFFF
+    FontColor #1A1A1A
+}
+
+title Deployment topology — local development / demo
+
+node "«device»\nWorkstation\n(Windows · macOS · Linux)" as host {
+
+    node "«executionEnvironment»\nBrowser" as browser {
+        artifact "React 19 SPA\nTanStack Router\nTanStack Query\nVisx + Tailwind v4" as spa
+    }
+
+    node "«executionEnvironment»\nNode.js 20\nport 5173" as vite {
+        artifact "Vite 6 dev server" as vite_proc
+    }
+
+    node "«executionEnvironment»\nPython 3.13\nport 8000" as uvicorn {
+        artifact "uvicorn worker" as worker
+        artifact "FastAPI app\napi.main:application" as fastapi
+        artifact "asyncmy connection pool" as pool
+    }
+
+    node "«executionEnvironment»\nDocker Engine" as docker {
+        node "«device»\nmye030_mysql container\nmysql:8.0\nport 3306" as mysql_container {
+            database "mye030 schema\nInnoDB · utf8mb4" as mysql_db
+        }
+    }
+}
+
+spa --> vite_proc : HTTP\nstatic + HMR
+spa --> fastapi : HTTPS / REST\nGET /api/*
+worker --> fastapi : hosts
+fastapi --> pool : queries via Depends
+pool --> mysql_db : asyncmy / TCP 3306\nraw parameterised SQL
+
+note right of vite
+  Started with: pnpm dev
+  Proxies /api/* to uvicorn (same origin).
+end note
+note right of uvicorn
+  Started with:
+  uv run uvicorn api.main:application --reload --port 8000
+end note
+note right of mysql_container
+  Started with: docker compose up -d
+  Volume-backed for persistence.
+  Container flag --local-infile=1 enables LOAD DATA LOCAL INFILE.
+end note
+
+@enduml

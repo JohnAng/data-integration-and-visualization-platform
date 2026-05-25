@@ -1,0 +1,103 @@
+# =====================================================================
+# MYE030 — full stack docker-compose
+# =====================================================================
+# Single command to boot everything:
+#     docker compose up                # foreground (Ctrl+C to stop)
+#     docker compose up -d             # detached
+#     docker compose down              # stop (volume persists)
+#     docker compose down -v           # stop + drop the MySQL volume
+#
+# Three services:
+#   * mysql_db  — MySQL 8.0 with auto-restore from
+#                 deliverables/db_backup.sql.gz on first boot.
+#   * backend   — FastAPI / uvicorn on :8000, async raw SQL via asyncmy.
+#   * frontend  — pre-built Vite bundle served by nginx on :5173,
+#                 with /api/, /docs, /redoc, /openapi.json and /health
+#                 reverse-proxied to backend:8000 (single-origin, no CORS).
+#
+# Open http://localhost:5173 once the three services are healthy.
+# =====================================================================
+
+services:
+  mysql_db:
+    image: mysql:8.0
+    container_name: ${MYSQL_CONTAINER_NAME:-mye030_mysql}
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+    ports:
+      - "${MYSQL_PORT:-3306}:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./exports:/exports:ro
+      - ./sql_scripts:/sql_scripts:ro
+      - ./deliverables:/backup:ro
+      - ./scripts/mysql-init.sh:/docker-entrypoint-initdb.d/00_restore_backup.sh:ro
+    command: >
+      --default-authentication-plugin=mysql_native_password
+      --local-infile=1
+      --innodb_buffer_pool_size=1371M
+      --character-set-server=utf8mb4
+      --collation-server=utf8mb4_unicode_ci
+    healthcheck:
+      # IMPORTANT: force TCP (-h 127.0.0.1) so the check only passes after
+      # the docker-entrypoint init phase finishes. The default unix-socket
+      # ping would report healthy while init scripts (auto-restore) are
+      # still running, causing the backend to start too early and crash
+      # with 'Connection refused'.
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -uroot -p$${MYSQL_ROOT_PASSWORD}"]
+      interval: 10s
+      timeout: 5s
+      retries: 60
+      start_period: 90s
+
+  backend:
+    build:
+      context: ./src/backend
+      dockerfile: Dockerfile
+    image: mye030_backend:latest
+    container_name: mye030_backend
+    restart: unless-stopped
+    depends_on:
+      mysql_db:
+        condition: service_healthy
+    environment:
+      MYSQL_HOST: mysql_db
+      MYSQL_PORT: 3306
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+    # data/ and exports/ are mounted so that `docker compose run --rm
+    # backend python -m etl.exporter` finds the raw CSVs and writes the
+    # 9 export files. They are unused by the long-running uvicorn
+    # process (which only talks to MySQL), but cost nothing.
+    volumes:
+      - ./data:/data:ro
+      - ./exports:/exports
+    ports:
+      - "${BACKEND_PORT:-8000}:8000"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://localhost:8000/health').status==200 else 1)"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 30s
+
+  frontend:
+    build:
+      context: ./src/frontend
+      dockerfile: Dockerfile
+    image: mye030_frontend:latest
+    container_name: mye030_frontend
+    restart: unless-stopped
+    depends_on:
+      backend:
+        condition: service_healthy
+    ports:
+      - "${FRONTEND_PORT:-5173}:80"
+
+volumes:
+  mysql_data:

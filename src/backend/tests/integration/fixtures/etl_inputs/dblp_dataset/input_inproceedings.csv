@@ -1,0 +1,7 @@
+id;author;booktitle;title;year;pages;url
+101;Alice Smith|Bob Jones|Charlie Brown;EDBT;Conference Paper One;2020;1-10;http://example.org/conf/101
+102;Diana White;ICDE;Conference Paper Two;2021;11-20;http://example.org/conf/102
+103;Eve Black|Frank Green;VLDB;Conference Paper Three;2022;21-30;http://example.org/conf/103
+104;Alice Smith;EDBT (best of volume);Best of EDBT paper;2020;31-40;http://example.org/conf/104
+105;Bob Jones;Unknown Workshop;Workshop paper;2021;1-5;http://example.org/conf/105
+106;Charlie Brown;;Booktitle missing;2020;1-10;http://example.org/conf/106

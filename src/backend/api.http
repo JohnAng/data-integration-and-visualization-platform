@@ -1,0 +1,241 @@
+### MYE030 Backend API — manual request playbook
+### Open this file in PyCharm / VS Code REST Client and click the run gutter
+### next to each request. Server must be running on port 8000.
+
+@host = http://localhost:8000
+
+
+### -----------------------------------------------------------------
+### Meta
+### -----------------------------------------------------------------
+
+### Liveness probe
+GET {{host}}/health
+
+
+### OpenAPI schema (auto-generated from Pydantic models)
+GET {{host}}/openapi.json
+
+
+### Corpus totals (powers landing page + dashboard KPI tiles)
+GET {{host}}/api/meta/totals
+
+
+### -----------------------------------------------------------------
+### Journals
+### -----------------------------------------------------------------
+
+### List journals (first page)
+GET {{host}}/api/journals?page=1&page_size=20
+
+
+### Filter journals by quartile
+GET {{host}}/api/journals?best_quartile=Q1&page_size=10
+
+
+### Filter journals by publisher
+GET {{host}}/api/journals?publisher=Springer&page_size=10
+
+
+### Filter journals by subject area
+GET {{host}}/api/journals?best_subject_area=Computer Science&page_size=10
+
+
+### Free-text search
+GET {{host}}/api/journals?search_text=IEEE&page_size=10
+
+
+### Journal profile (no year filter)
+GET {{host}}/api/journals/1
+
+
+### Journal profile filtered by year range
+GET {{host}}/api/journals/1?start_year=2010&end_year=2020
+
+
+### Journal yearly statistics for the line chart
+GET {{host}}/api/journals/1/yearly-statistics
+
+
+### Journal yearly statistics with year range
+GET {{host}}/api/journals/1/yearly-statistics?start_year=2000&end_year=2020
+
+
+### Journal articles paginated
+GET {{host}}/api/journals/1/articles?page=1&page_size=20
+
+
+### Journal articles filtered by year range
+GET {{host}}/api/journals/1/articles?start_year=2018&end_year=2020
+
+
+### Journal paper details with full author list
+GET {{host}}/api/journals/1/articles/1
+
+
+### -----------------------------------------------------------------
+### Conferences
+### -----------------------------------------------------------------
+
+### List conferences
+GET {{host}}/api/conferences?page=1&page_size=20
+
+
+### Filter conferences by rank
+GET {{host}}/api/conferences?rank_value=A*&page_size=10
+
+
+### Filter conferences by primary FoR
+GET {{host}}/api/conferences?primary_for=4605&page_size=10
+
+
+### Search conferences (matches title and acronym)
+GET {{host}}/api/conferences?search_text=EDBT
+
+
+### Conference profile (no filter)
+GET {{host}}/api/conferences/1
+
+
+### Conference profile filtered by year range
+GET {{host}}/api/conferences/1?start_year=2015&end_year=2020
+
+
+### Conference yearly statistics
+GET {{host}}/api/conferences/1/yearly-statistics
+
+
+### Conference articles
+GET {{host}}/api/conferences/1/articles?page=1&page_size=20
+
+
+### Conference paper details with full author list
+GET {{host}}/api/conferences/1/articles/1
+
+
+### -----------------------------------------------------------------
+### Authors
+### -----------------------------------------------------------------
+
+### Search authors by name
+GET {{host}}/api/authors?name_query=Smith&page_size=20
+
+
+### Full author profile
+GET {{host}}/api/authors/1
+
+
+### Author annual statistics
+GET {{host}}/api/authors/1/yearly-statistics
+
+
+### Author article list across journals and conferences
+GET {{host}}/api/authors/1/articles?page=1&page_size=20
+
+
+### Author article list filtered by year range
+GET {{host}}/api/authors/1/articles?start_year=2010&end_year=2020
+
+
+### -----------------------------------------------------------------
+### Years
+### -----------------------------------------------------------------
+
+### Year summary timeseries
+GET {{host}}/api/years
+
+
+### Year summary bounded by range
+GET {{host}}/api/years?start_year=2000&end_year=2020
+
+
+### Single year profile
+GET {{host}}/api/years/2015
+
+
+### All articles published in a year
+GET {{host}}/api/years/2015/articles?page=1&page_size=20
+
+
+### Articles in a year filtered by conference
+GET {{host}}/api/years/2015/articles?conference_id=1
+
+
+### Articles in a year filtered by journal
+GET {{host}}/api/years/2015/articles?journal_id=1
+
+
+### Articles in a year filtered by author
+GET {{host}}/api/years/2015/articles?author_id=1
+
+
+### Journals active in a given year
+GET {{host}}/api/years/2015/journals?page=1&page_size=20
+
+
+### Conferences active in a given year
+GET {{host}}/api/years/2015/conferences?page=1&page_size=20
+
+
+### -----------------------------------------------------------------
+### Charts
+### -----------------------------------------------------------------
+
+### Publisher x quartile distribution for the bar chart
+GET {{host}}/api/charts/publisher-quartile-distribution
+
+
+### Subject area yearly summary (journal line chart)
+GET {{host}}/api/charts/subject-area-yearly-summary
+
+
+### Subject area yearly summary filtered
+GET {{host}}/api/charts/subject-area-yearly-summary?best_subject_area=Computer Science&start_year=2000&end_year=2020
+
+
+### Field of Research yearly summary (conference line chart)
+GET {{host}}/api/charts/field-of-research-yearly-summary
+
+
+### Field of Research yearly summary filtered
+GET {{host}}/api/charts/field-of-research-yearly-summary?primary_for=4605
+
+
+### Multi-venue comparison line chart (journals)
+GET {{host}}/api/charts/venue-comparison?venue_type=journal&venue_ids=1&venue_ids=2&venue_ids=3
+
+
+### Multi-venue comparison line chart (conferences)
+GET {{host}}/api/charts/venue-comparison?venue_type=conference&venue_ids=1&venue_ids=2&venue_ids=3&start_year=2010&end_year=2020
+
+
+### Multi-venue metrics bar chart
+GET {{host}}/api/charts/venue-metrics?venue_type=journal&venue_ids=1&venue_ids=2&venue_ids=3
+
+
+### Journal metrics scatter
+GET {{host}}/api/charts/journal-metrics?best_quartile=Q1&maximum_points=1000
+
+
+### Authors vs articles scatter (conferences)
+GET {{host}}/api/charts/authors-vs-articles-scatter?venue_type=conference&maximum_points=1000
+
+
+### Authors vs articles scatter (journals)
+GET {{host}}/api/charts/authors-vs-articles-scatter?venue_type=journal&maximum_points=1000
+
+
+### -----------------------------------------------------------------
+### Error path examples (expect application/problem+json responses)
+### -----------------------------------------------------------------
+
+### 404 on missing journal
+GET {{host}}/api/journals/99999999
+
+
+### 422 on malformed quartile value
+GET {{host}}/api/journals?best_quartile=invalid
+
+
+### 422 on missing required query parameter
+GET {{host}}/api/charts/venue-comparison

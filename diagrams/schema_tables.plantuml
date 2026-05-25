@@ -1,0 +1,131 @@
+@startuml
+
+!theme plain
+top to bottom direction
+skinparam linetype ortho
+
+class node2 as "bridge_conference_article_authors  /* Many-to-many bridge between conference articles and their aut... */" {
+   article_id: int unsigned
+   author_id: int unsigned
+}
+class node12 as "bridge_journal_article_authors  /* Many-to-many bridge between journal articles and their authors. */" {
+   article_id: int unsigned
+   author_id: int unsigned
+}
+class node7 as "fact_conference_articles  /* Conference article facts. Each row belongs to exactly one con... */" {
+   source_id: varchar(50)
+   title: varchar(500)
+   year: smallint unsigned
+   pages: varchar(100)
+   url: varchar(500)
+   conference_id: int unsigned
+   article_id: int unsigned
+}
+class node9 as "fact_journal_articles  /* Journal article facts. Each row belongs to exactly one journal. */" {
+   source_id: varchar(50)
+   title: varchar(500)
+   year: smallint unsigned
+   pages: varchar(100)
+   url: varchar(500)
+   journal_id: int unsigned
+   article_id: int unsigned
+}
+class node8 as "lookup_authors  /* Distinct authors extracted from the DBLP author fields. */" {
+   author_name: varchar(255)
+   author_id: int unsigned
+}
+class node10 as "lookup_conferences  /* Conference dimension enriched from the iCore26 source. */" {
+   title: varchar(500)
+   acronym: varchar(50)
+   rank_value: varchar(50)
+   primary_for: varchar(10)
+   conference_id: int unsigned
+}
+class node13 as "lookup_field_of_research_categories  /* Field of Research code to description map from icoreCategorie... */" {
+   description: varchar(255)
+   parent_code: varchar(10)
+   code: varchar(10)
+}
+class node11 as "lookup_journals  /* Journal dimension enriched from Kaggle SJR rankings via fuzzy... */" {
+   title: varchar(500)
+   publisher: varchar(255)
+   country: varchar(100)
+   best_quartile: varchar(2)
+   best_subject_area: varchar(100)
+   sjr_index: decimal(10,3)
+   citation_score: decimal(10,2)
+   h_index: smallint unsigned
+   total_documents: int unsigned
+   total_documents_3y: int unsigned
+   total_references: int unsigned
+   total_citations_3y: int unsigned
+   citable_documents_3y: int unsigned
+   citations_per_document_2y: decimal(10,2)
+   references_per_document: decimal(10,2)
+   journal_id: int unsigned
+}
+class materialized_author_profile {
+   author_name: varchar(255)
+   total_articles: int unsigned
+   earliest_year: smallint
+   latest_year: smallint
+   average_articles_per_year: decimal(8,2)
+   author_id: int unsigned
+}
+class materialized_authors_vs_articles_scatter_conferences {
+   venue_title: varchar(255)
+   rank_or_quartile: varchar(64)
+   average_articles_per_year: decimal(10,2)
+   average_authors_per_article_overall: decimal(10,2)
+   total_articles: int unsigned
+   venue_id: int
+}
+class materialized_authors_vs_articles_scatter_journals {
+   venue_title: varchar(255)
+   rank_or_quartile: varchar(8)
+   average_articles_per_year: decimal(10,2)
+   average_authors_per_article_overall: decimal(10,2)
+   total_articles: int unsigned
+   venue_id: int
+}
+class materialized_field_of_research_yearly_summary {
+   primary_for_description: varchar(255)
+   distinct_conferences: int unsigned
+   articles_count: int unsigned
+   primary_for: varchar(40)
+   year: smallint
+}
+class materialized_subject_area_yearly_summary {
+   distinct_journals: int unsigned
+   articles_count: int unsigned
+   best_subject_area: varchar(255)
+   year: smallint
+}
+class materialized_year_summary {
+   journal_articles: int unsigned
+   conference_articles: int unsigned
+   total_articles: int unsigned
+   distinct_journals: int unsigned
+   distinct_conferences: int unsigned
+   distinct_authors: int unsigned
+   total_authors: int unsigned
+   year: smallint
+}
+class node1 as "rejection_logs  /* Quarantine for ETL-rejected rows. Loaded by 02_load.sql. */" {
+   source_file: varchar(100)
+   source_id: varchar(100)
+   reason: varchar(255)
+   raw_row: json
+   ingested_at: timestamp
+   rejection_id: bigint unsigned
+}
+
+node2                                                 -[#595959,plain]-^  node7                                                : "article_id"
+node2                                                 -[#595959,plain]-^  node8                                                : "author_id"
+node12                                                -[#595959,plain]-^  node9                                                : "article_id"
+node12                                                -[#595959,plain]-^  node8                                                : "author_id"
+node7                                                 -[#595959,plain]-^  node10                                               : "conference_id"
+node9                                                 -[#595959,plain]-^  node11                                               : "journal_id"
+node10                                                -[#595959,plain]-^  node13                                               : "primary_for:code"
+node13                                                -[#595959,plain]-^  node13                                               : "parent_code:code"
+@enduml

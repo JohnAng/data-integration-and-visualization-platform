@@ -1,0 +1,21 @@
+% =====================================================================
+% MYE030 — Final report
+% Author : Ioannis Angelakos · 2403
+% Engine : XeLaTeX
+% Build  : xelatex -shell-escape main.tex   (twice for ToC)
+% =====================================================================
+\documentclass[12pt,a4paper]{report}
+
+\input{preamble}
+
+\begin{document}
+
+\include{chapters/00_cover}
+\include{chapters/01_history}
+\tableofcontents
+\include{chapters/02_database}
+\include{chapters/03_architecture}
+\include{chapters/04_qa_samples}
+\include{chapters/05_misc}
+
+\end{document}

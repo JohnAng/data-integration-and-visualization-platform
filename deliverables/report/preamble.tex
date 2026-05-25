@@ -1,0 +1,100 @@
+% --------------------------------------------------------------------
+% Fonts & languages
+% --------------------------------------------------------------------
+\usepackage{fontspec}
+\usepackage{polyglossia}
+\setdefaultlanguage{greek}
+\setotherlanguage{english}
+
+% System fonts that carry the full Greek alphabet and ship on every
+% Windows install (Times New Roman, Arial, Consolas) plus their cross
+% platform aliases for macOS / Linux fallback. Polyglossia picks them
+% up through fontspec.
+\setmainfont{Times New Roman}[
+    Ligatures=TeX,
+]
+\setsansfont{Arial}[Scale=MatchLowercase]
+\setmonofont{Consolas}[Scale=MatchLowercase]
+
+% --------------------------------------------------------------------
+% Layout
+% --------------------------------------------------------------------
+\usepackage[a4paper,margin=2.5cm,headheight=15pt]{geometry}
+\usepackage{microtype}
+\usepackage{setspace}
+\onehalfspacing
+\usepackage{parskip}
+\usepackage{titlesec}
+\titleformat{\chapter}[hang]{\Huge\bfseries}{\thechapter}{1em}{}
+\titlespacing*{\chapter}{0pt}{-30pt}{20pt}
+
+\sloppy
+\emergencystretch=3em
+\hbadness=10000
+\hfuzz=2pt
+
+\usepackage{float}
+
+% --------------------------------------------------------------------
+% Figures, tables, code
+% --------------------------------------------------------------------
+\usepackage{graphicx}
+\graphicspath{{figures/}}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{longtable}
+\usepackage{caption}
+\captionsetup{labelfont=bf,font=small}
+\usepackage{listings}
+\usepackage{xcolor}
+\definecolor{ink}{HTML}{1A1A1A}
+\definecolor{navy}{HTML}{14213D}
+\definecolor{ochre}{HTML}{C2884F}
+\definecolor{parchment}{HTML}{EBE3CC}
+\definecolor{slate}{HTML}{5F6470}
+\lstset{
+    basicstyle=\ttfamily\footnotesize\color{ink},
+    keywordstyle=\bfseries\color{navy},
+    commentstyle=\itshape\color{slate},
+    stringstyle=\color{ochre},
+    backgroundcolor=\color{parchment!40},
+    frame=single,
+    framerule=0pt,
+    rulecolor=\color{parchment!40},
+    breaklines=true,
+    captionpos=b,
+    showstringspaces=false,
+    columns=fullflexible,
+    keepspaces=true,
+}
+\lstdefinelanguage{sqlmore}[]{SQL}{
+    morekeywords={INNODB,UNSIGNED,UTF8MB4,UTF8MB4_UNICODE_CI,KEY},
+}
+
+% --------------------------------------------------------------------
+% Cross-references & hyperlinks
+% --------------------------------------------------------------------
+\usepackage{hyperref}
+\hypersetup{
+    colorlinks=true,
+    linkcolor=navy,
+    citecolor=navy,
+    urlcolor=ochre,
+    pdfauthor={Ioannis Angelakos},
+    pdftitle={MYE030 Final Report -- Data Integration and Visualisation Platform},
+    pdfsubject={MYE030 Spring 2026},
+}
+
+% --------------------------------------------------------------------
+% Headers / footers
+% --------------------------------------------------------------------
+\usepackage{fancyhdr}
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\small\textsc{MYE030 · ΠΘΤ\&ΕΒΔ}}
+\fancyhead[C]{\small\textsc{Ακ. έτος 2025--2026}}
+\fancyhead[R]{\small\textsc{Αγγελάκος · 2403}}
+\fancyfoot[C]{\thepage}
+\renewcommand{\headrulewidth}{0.4pt}
+\renewcommand{\footrulewidth}{0pt}
+\setlength{\headheight}{14.5pt}

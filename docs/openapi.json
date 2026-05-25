@@ -1,0 +1,4695 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "MYE030 Data Integration & Visualization API",
+    "version": "0.1.0"
+  },
+  "paths": {
+    "/api/meta/totals": {
+      "get": {
+        "tags": [
+          "meta"
+        ],
+        "summary": "Get Corpus Totals",
+        "description": "Return headline counts and year span for the entire corpus.",
+        "operationId": "get_corpus_totals_api_meta_totals_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CorpusTotalsResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/meta/options": {
+      "get": {
+        "tags": [
+          "meta"
+        ],
+        "summary": "Get Filter Options",
+        "description": "Return the distinct values feeding every dropdown in the playground.\n\nSubject areas, publishers (with journal counts), Field of Research\ncodes (with human descriptions) and conference ranks. Results are\nsorted in a sensible reading order so the client can use them\ndirectly without re-sorting.",
+        "operationId": "get_filter_options_api_meta_options_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FilterOptionsResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/journals": {
+      "get": {
+        "tags": [
+          "journals"
+        ],
+        "summary": "List Journals",
+        "description": "Return a paginated list of journals, optionally filtered.\n\nAll free-text filters (``search_text``, ``publisher``,\n``best_subject_area``) are case-insensitive substring matches.\n``ranked_only=true`` hides rows without a quartile;\n``has_publisher`` and ``has_subject_area`` hide rows whose respective\ncolumn is NULL. Sortable columns: ``title``, ``publisher``,\n``best_quartile``, ``best_subject_area``, ``sjr_index``.",
+        "operationId": "list_journals_api_journals_get",
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 1,
+              "title": "Page"
+            }
+          },
+          {
+            "name": "page_size",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 200,
+              "minimum": 1,
+              "default": 50,
+              "title": "Page Size"
+            }
+          },
+          {
+            "name": "search_text",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "minLength": 1
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Search Text"
+            }
+          },
+          {
+            "name": "publisher",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "minLength": 1
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Publisher"
+            }
+          },
+          {
+            "name": "best_quartile",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "pattern": "^Q[1-4]$"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Best Quartile"
+            }
+          },
+          {
+            "name": "best_subject_area",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "minLength": 1
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Best Subject Area"
+            }
+          },
+          {
+            "name": "ranked_only",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": false,
+              "title": "Ranked Only"
+            }
+          },
+          {
+            "name": "has_publisher",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": false,
+              "title": "Has Publisher"
+            }
+          },
+          {
+            "name": "has_subject_area",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": false,
+              "title": "Has Subject Area"
+            }
+          },
+          {
+            "name": "order_by",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Order By"
+            }
+          },
+          {
+            "name": "order_dir",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "pattern": "^(asc|desc)$"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Order Dir"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaginatedResponse_JournalSummary_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/journals/{journal_id}": {
+      "get": {
+        "tags": [
+          "journals"
+        ],
+        "summary": "Get Journal Profile",
+        "description": "Return the aggregated profile of one journal, optionally year-bounded.",
+        "operationId": "get_journal_profile_api_journals__journal_id__get",
+        "parameters": [
+          {
+            "name": "journal_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "title": "Journal Id"
+            }
+          },
+          {
+            "name": "start_year",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer",
+                  "maximum": 2100,
+                  "minimum": 1900
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Start Year"
+            }
+          },
+          {
+            "name": "end_year",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer",
+                  "maximum": 2100,
+                  "minimum": 1900
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "End Year"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JournalProfile"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/journals/{journal_id}/articles/{article_id}": {
+      "get": {
+        "tags": [
+          "journals"
+        ],
+        "summary": "Get Journal Article Details",
+        "description": "Return full details of one journal article including its authors.",
+        "operationId": "get_journal_article_details_api_journals__journal_id__articles__article_id__get",
+        "parameters": [
+          {
+            "name": "journal_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "title": "Journal Id"
+            }
+          },
+          {
+            "name": "article_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "title": "Article Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaperDetails"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/journals/{journal_id}/yearly-statistics": {
+      "get": {
+        "tags": [
+          "journals"
+        ],
+        "summary": "Get Journal Yearly Statistics",
+        "description": "Return the per-year publication statistics that drive the line chart.\n\nTrims a trailing partial year by default; pass\n``include_partial_last_year=true`` to receive every row from the\nunderlying view.",
+        "operationId": "get_journal_yearly_statistics_api_journals__journal_id__yearly_statistics_get",
+        "parameters": [
+          {
+            "name": "journal_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "title": "Journal Id"
+            }
+          },
+          {
+            "name": "start_year",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer",
+                  "maximum": 2100,
+                  "minimum": 1900
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Start Year"
+            }
+          },
+          {
+            "name": "end_year",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer",
+                  "maximum": 2100,
+                  "minimum": 1900
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "End Year"
+            }
+          },
+          {
+            "name": "include_partial_last_year",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": false,
+              "title": "Include Partial Last Year"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/JournalYearlyStatistic"
+                  },
+                  "title": "Response Get Journal Yearly Statistics Api Journals  Journal Id  Yearly Statistics Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/journals/{journal_id}/articles": {
+      "get": {
+        "tags": [
+          "journals"
+        ],
+        "summary": "List Journal Articles",
+        "description": "Return a paginated list of articles published in the journal.\n\nSortable columns: ``title``, ``year``, ``pages``.",
+        "operationId": "list_journal_articles_api_journals__journal_id__articles_get",
+        "parameters": [
+          {
+            "name": "journal_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "title": "Journal Id"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 1,
+              "title": "Page"
+            }
+          },
+          {
+            "name": "page_size",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 200,
+              "minimum": 1,
+              "default": 50,
+              "title": "Page Size"
+            }
+          },
+          {
+            "name": "start_year",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer",
+                  "maximum": 2100,
+                  "minimum": 1900
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Start Year"
+            }
+          },
+          {
+            "name": "end_year",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer",
+                  "maximum": 2100,
+                  "minimum": 1900
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "End Year"
+            }
+          },
+          {
+            "name": "order_by",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Order By"
+            }
+          },
+          {
+            "name": "order_dir",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "pattern": "^(asc|desc)$"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Order Dir"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaginatedResponse_JournalArticle_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/conferences": {
+      "get": {
+        "tags": [
+          "conferences"
+        ],
+        "summary": "List Conferences",
+        "description": "Return a paginated list of conferences, optionally filtered.\n\n``search_text`` is a substring match against both title and acronym.\n``primary_for`` is a substring match. ``ranked_only`` hides rows\nwithout an iCore rank; ``has_acronym`` hides rows without an\nacronym; ``has_for`` hides rows without a Field of Research code.\nSortable columns: ``title``, ``acronym``, ``rank_value``,\n``primary_for``.",
+        "operationId": "list_conferences_api_conferences_get",
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 1,
+              "title": "Page"
+            }
+          },
+          {
+            "name": "page_size",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 200,
+              "minimum": 1,
+              "default": 50,
+              "title": "Page Size"
+            }
+          },
+          {
+            "name": "search_text",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "minLength": 1
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Search Text"
+            }
+          },
+          {
+            "name": "rank_value",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Rank Value"
+            }
+          },
+          {
+            "name": "primary_for",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "minLength": 1
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Primary For"
+            }
+          },
+          {
+            "name": "ranked_only",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": false,
+              "title": "Ranked Only"
+            }
+          },
+          {
+            "name": "has_acronym",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": false,
+              "title": "Has Acronym"
+            }
+          },
+          {
+            "name": "has_for",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": false,
+              "title": "Has For"
+            }
+          },
+          {
+            "name": "order_by",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Order By"
+            }
+          },
+          {
+            "name": "order_dir",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "pattern": "^(asc|desc)$"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Order Dir"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaginatedResponse_ConferenceSummary_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/conferences/{conference_id}": {
+      "get": {
+        "tags": [
+          "conferences"
+        ],
+        "summary": "Get Conference Profile",
+        "description": "Return the aggregated profile of one conference, optionally year-bounded.",
+        "operationId": "get_conference_profile_api_conferences__conference_id__get",
+        "parameters": [
+          {
+            "name": "conference_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "title": "Conference Id"
+            }
+          },
+          {
+            "name": "start_year",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer",
+                  "maximum": 2100,
+                  "minimum": 1900
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Start Year"
+            }
+          },
+          {
+            "name": "end_year",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer",
+                  "maximum": 2100,
+                  "minimum": 1900
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "End Year"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConferenceProfile"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/conferences/{conference_id}/articles/{article_id}": {
+      "get": {
+        "tags": [
+          "conferences"
+        ],
+        "summary": "Get Conference Article Details",
+        "description": "Return full details of one conference paper including its authors.",
+        "operationId": "get_conference_article_details_api_conferences__conference_id__articles__article_id__get",
+        "parameters": [
+          {
+            "name": "conference_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "title": "Conference Id"
+            }
+          },
+          {
+            "name": "article_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "title": "Article Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaperDetails"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/conferences/{conference_id}/yearly-statistics": {
+      "get": {
+        "tags": [
+          "conferences"
+        ],
+        "summary": "Get Conference Yearly Statistics",
+        "description": "Return the per-year publication statistics that drive the line chart.\n\nTrims a trailing partial year by default.",
+        "operationId": "get_conference_yearly_statistics_api_conferences__conference_id__yearly_statistics_get",
+        "parameters": [
+          {
+            "name": "conference_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "title": "Conference Id"
+            }
+          },
+          {
+            "name": "start_year",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer",
+                  "maximum": 2100,
+                  "minimum": 1900
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Start Year"
+            }
+          },
+          {
+            "name": "end_year",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer",
+                  "maximum": 2100,
+                  "minimum": 1900
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "End Year"
+            }
+          },
+          {
+            "name": "include_partial_last_year",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": false,
+              "title": "Include Partial Last Year"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ConferenceYearlyStatistic"
+                  },
+                  "title": "Response Get Conference Yearly Statistics Api Conferences  Conference Id  Yearly Statistics Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/conferences/{conference_id}/articles": {
+      "get": {
+        "tags": [
+          "conferences"
+        ],
+        "summary": "List Conference Articles",
+        "description": "Return a paginated list of articles presented at the conference.\n\nSortable columns: ``title``, ``year``, ``pages``.",
+        "operationId": "list_conference_articles_api_conferences__conference_id__articles_get",
+        "parameters": [
+          {
+            "name": "conference_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "title": "Conference Id"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 1,
+              "title": "Page"
+            }
+          },
+          {
+            "name": "page_size",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 200,
+              "minimum": 1,
+              "default": 50,
+              "title": "Page Size"
+            }
+          },
+          {
+            "name": "start_year",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer",
+                  "maximum": 2100,
+                  "minimum": 1900
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Start Year"
+            }
+          },
+          {
+            "name": "end_year",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer",
+                  "maximum": 2100,
+                  "minimum": 1900
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "End Year"
+            }
+          },
+          {
+            "name": "order_by",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Order By"
+            }
+          },
+          {
+            "name": "order_dir",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "pattern": "^(asc|desc)$"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Order Dir"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaginatedResponse_ConferenceArticle_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/years": {
+      "get": {
+        "tags": [
+          "years"
+        ],
+        "summary": "List Year Summaries",
+        "description": "Return the year summary timeseries optionally bounded by a range.\n\nThe last year of the corpus is sometimes a partial export (DBLP\nsnapshots taken mid-year). It is trimmed by default; pass\n``include_partial_last_year=true`` to receive every row.",
+        "operationId": "list_year_summaries_api_years_get",
+        "parameters": [
+          {
+            "name": "start_year",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer",
+                  "maximum": 2100,
+                  "minimum": 1900
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Start Year"
+            }
+          },
+          {
+            "name": "end_year",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer",
+                  "maximum": 2100,
+                  "minimum": 1900
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "End Year"
+            }
+          },
+          {
+            "name": "include_partial_last_year",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": false,
+              "title": "Include Partial Last Year"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/YearSummary"
+                  },
+                  "title": "Response List Year Summaries Api Years Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/years/{year}": {
+      "get": {
+        "tags": [
+          "years"
+        ],
+        "summary": "Get Year Summary",
+        "description": "Return the aggregate summary for one publication year.",
+        "operationId": "get_year_summary_api_years__year__get",
+        "parameters": [
+          {
+            "name": "year",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "maximum": 2100,
+              "minimum": 1900,
+              "title": "Year"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/YearSummary"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/years/{year}/journals": {
+      "get": {
+        "tags": [
+          "years"
+        ],
+        "summary": "List Year Journals",
+        "description": "Return journals that published in the requested year.\n\nSortable columns: ``title``, ``publisher``, ``best_quartile``,\n``sjr_index``, ``articles_in_year``.",
+        "operationId": "list_year_journals_api_years__year__journals_get",
+        "parameters": [
+          {
+            "name": "year",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "maximum": 2100,
+              "minimum": 1900,
+              "title": "Year"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 1,
+              "title": "Page"
+            }
+          },
+          {
+            "name": "page_size",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 200,
+              "minimum": 1,
+              "default": 50,
+              "title": "Page Size"
+            }
+          },
+          {
+            "name": "order_by",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Order By"
+            }
+          },
+          {
+            "name": "order_dir",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "pattern": "^(asc|desc)$"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Order Dir"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaginatedResponse_YearJournalEntry_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/years/{year}/articles": {
+      "get": {
+        "tags": [
+          "years"
+        ],
+        "summary": "List Year Articles",
+        "description": "Return every article published in the year, optionally filtered.\n\nSortable columns: ``title``, ``venue_title``, ``venue_type``.",
+        "operationId": "list_year_articles_api_years__year__articles_get",
+        "parameters": [
+          {
+            "name": "year",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "maximum": 2100,
+              "minimum": 1900,
+              "title": "Year"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 1,
+              "title": "Page"
+            }
+          },
+          {
+            "name": "page_size",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 200,
+              "minimum": 1,
+              "default": 50,
+              "title": "Page Size"
+            }
+          },
+          {
+            "name": "conference_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer",
+                  "minimum": 1
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Conference Id"
+            }
+          },
+          {
+            "name": "journal_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer",
+                  "minimum": 1
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Journal Id"
+            }
+          },
+          {
+            "name": "author_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer",
+                  "minimum": 1
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Author Id"
+            }
+          },
+          {
+            "name": "order_by",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Order By"
+            }
+          },
+          {
+            "name": "order_dir",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "pattern": "^(asc|desc)$"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Order Dir"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaginatedResponse_YearArticle_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/years/{year}/conferences": {
+      "get": {
+        "tags": [
+          "years"
+        ],
+        "summary": "List Year Conferences",
+        "description": "Return conferences that held papers in the requested year.\n\nSortable columns: ``title``, ``acronym``, ``rank_value``,\n``articles_in_year``.",
+        "operationId": "list_year_conferences_api_years__year__conferences_get",
+        "parameters": [
+          {
+            "name": "year",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "maximum": 2100,
+              "minimum": 1900,
+              "title": "Year"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 1,
+              "title": "Page"
+            }
+          },
+          {
+            "name": "page_size",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 200,
+              "minimum": 1,
+              "default": 50,
+              "title": "Page Size"
+            }
+          },
+          {
+            "name": "order_by",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Order By"
+            }
+          },
+          {
+            "name": "order_dir",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "pattern": "^(asc|desc)$"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Order Dir"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaginatedResponse_YearConferenceEntry_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/authors": {
+      "get": {
+        "tags": [
+          "authors"
+        ],
+        "summary": "Search Authors",
+        "description": "Return a paginated author listing, optionally filtered by name substring.\n\nBy default, only authors with at least one indexed contribution are\nreturned. Pass ``min_articles=0`` to include silent authors (i.e.\nnames present in ``lookup_authors`` but never matched to any article).\n\nSortable columns: ``author_name``, ``author_id``, ``total_articles``,\n``earliest_year``, ``latest_year``.",
+        "operationId": "search_authors_api_authors_get",
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 1,
+              "title": "Page"
+            }
+          },
+          {
+            "name": "page_size",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 200,
+              "minimum": 1,
+              "default": 50,
+              "title": "Page Size"
+            }
+          },
+          {
+            "name": "name_query",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "minLength": 1
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Name Query"
+            }
+          },
+          {
+            "name": "order_by",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Order By"
+            }
+          },
+          {
+            "name": "order_dir",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "pattern": "^(asc|desc)$"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Order Dir"
+            }
+          },
+          {
+            "name": "min_articles",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "default": 1,
+              "title": "Min Articles"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaginatedResponse_AuthorSummary_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/authors/{author_id}": {
+      "get": {
+        "tags": [
+          "authors"
+        ],
+        "summary": "Get Author Profile",
+        "description": "Return the aggregated profile of one author.",
+        "operationId": "get_author_profile_api_authors__author_id__get",
+        "parameters": [
+          {
+            "name": "author_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "title": "Author Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthorProfile"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/authors/{author_id}/yearly-statistics": {
+      "get": {
+        "tags": [
+          "authors"
+        ],
+        "summary": "Get Author Yearly Statistics",
+        "description": "Return the per-year article counts for the author's line chart.\n\nTrims a trailing partial year by default.",
+        "operationId": "get_author_yearly_statistics_api_authors__author_id__yearly_statistics_get",
+        "parameters": [
+          {
+            "name": "author_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "title": "Author Id"
+            }
+          },
+          {
+            "name": "include_partial_last_year",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": false,
+              "title": "Include Partial Last Year"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/AuthorYearlyStatistic"
+                  },
+                  "title": "Response Get Author Yearly Statistics Api Authors  Author Id  Yearly Statistics Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/authors/{author_id}/articles": {
+      "get": {
+        "tags": [
+          "authors"
+        ],
+        "summary": "List Author Articles",
+        "description": "Return a paginated list of every article the author has co-authored.\n\nSortable columns: ``title``, ``year``, ``venue_title``, ``venue_type``.",
+        "operationId": "list_author_articles_api_authors__author_id__articles_get",
+        "parameters": [
+          {
+            "name": "author_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "title": "Author Id"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 1,
+              "title": "Page"
+            }
+          },
+          {
+            "name": "page_size",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 200,
+              "minimum": 1,
+              "default": 50,
+              "title": "Page Size"
+            }
+          },
+          {
+            "name": "start_year",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer",
+                  "maximum": 2100,
+                  "minimum": 1900
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Start Year"
+            }
+          },
+          {
+            "name": "end_year",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer",
+                  "maximum": 2100,
+                  "minimum": 1900
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "End Year"
+            }
+          },
+          {
+            "name": "order_by",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Order By"
+            }
+          },
+          {
+            "name": "order_dir",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "pattern": "^(asc|desc)$"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Order Dir"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaginatedResponse_AuthorArticle_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/charts/publisher-quartile-distribution": {
+      "get": {
+        "tags": [
+          "charts"
+        ],
+        "summary": "Get Publisher Quartile Distribution",
+        "description": "Return all (publisher, quartile, count) triples for the bar chart.",
+        "operationId": "get_publisher_quartile_distribution_api_charts_publisher_quartile_distribution_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/PublisherQuartileEntry"
+                  },
+                  "type": "array",
+                  "title": "Response Get Publisher Quartile Distribution Api Charts Publisher Quartile Distribution Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/charts/subject-area-yearly-summary": {
+      "get": {
+        "tags": [
+          "charts"
+        ],
+        "summary": "Get Subject Area Yearly Summary",
+        "description": "Return per-bucket journal counts per Kaggle BestSubjectArea.\n\n``subject_areas`` accepts zero or more area names; omitting the\nparameter returns every area. ``granularity`` buckets the X axis:\n``year`` (no bucketing), ``five_year`` (2015, 2020\u2026), ``decade``\n(1990, 2000, 2010, 2020\u2026). Trims a trailing partial year per area\nby default.",
+        "operationId": "get_subject_area_yearly_summary_api_charts_subject_area_yearly_summary_get",
+        "parameters": [
+          {
+            "name": "subject_areas",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Subject Areas"
+            }
+          },
+          {
+            "name": "start_year",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer",
+                  "maximum": 2100,
+                  "minimum": 1900
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Start Year"
+            }
+          },
+          {
+            "name": "end_year",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer",
+                  "maximum": 2100,
+                  "minimum": 1900
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "End Year"
+            }
+          },
+          {
+            "name": "granularity",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "pattern": "^(year|five_year|decade)$",
+              "default": "year",
+              "title": "Granularity"
+            }
+          },
+          {
+            "name": "include_partial_last_year",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": false,
+              "title": "Include Partial Last Year"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/SubjectAreaYearlyEntry"
+                  },
+                  "title": "Response Get Subject Area Yearly Summary Api Charts Subject Area Yearly Summary Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/charts/field-of-research-yearly-summary": {
+      "get": {
+        "tags": [
+          "charts"
+        ],
+        "summary": "Get Field Of Research Yearly Summary",
+        "description": "Return per-bucket conference counts per iCore Field of Research.\n\n``primary_fors`` accepts zero or more codes; omitting the parameter\nreturns every code. Granularity behaviour mirrors the subject-area\nsummary endpoint.",
+        "operationId": "get_field_of_research_yearly_summary_api_charts_field_of_research_yearly_summary_get",
+        "parameters": [
+          {
+            "name": "primary_fors",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Primary Fors"
+            }
+          },
+          {
+            "name": "start_year",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer",
+                  "maximum": 2100,
+                  "minimum": 1900
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Start Year"
+            }
+          },
+          {
+            "name": "end_year",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer",
+                  "maximum": 2100,
+                  "minimum": 1900
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "End Year"
+            }
+          },
+          {
+            "name": "granularity",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "pattern": "^(year|five_year|decade)$",
+              "default": "year",
+              "title": "Granularity"
+            }
+          },
+          {
+            "name": "include_partial_last_year",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": false,
+              "title": "Include Partial Last Year"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/FieldOfResearchYearlyEntry"
+                  },
+                  "title": "Response Get Field Of Research Yearly Summary Api Charts Field Of Research Yearly Summary Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/charts/venue-comparison": {
+      "get": {
+        "tags": [
+          "charts"
+        ],
+        "summary": "Get Venue Comparison",
+        "description": "Return per-bucket article counts for each selected venue.",
+        "operationId": "get_venue_comparison_api_charts_venue_comparison_get",
+        "parameters": [
+          {
+            "name": "venue_type",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^(journal|conference)$",
+              "title": "Venue Type"
+            }
+          },
+          {
+            "name": "venue_ids",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "integer"
+              },
+              "minItems": 1,
+              "maxItems": 20,
+              "title": "Venue Ids"
+            }
+          },
+          {
+            "name": "start_year",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer",
+                  "maximum": 2100,
+                  "minimum": 1900
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Start Year"
+            }
+          },
+          {
+            "name": "end_year",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer",
+                  "maximum": 2100,
+                  "minimum": 1900
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "End Year"
+            }
+          },
+          {
+            "name": "granularity",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "pattern": "^(year|five_year|decade)$",
+              "default": "year",
+              "title": "Granularity"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/VenueComparisonPoint"
+                  },
+                  "title": "Response Get Venue Comparison Api Charts Venue Comparison Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/charts/venue-metrics": {
+      "get": {
+        "tags": [
+          "charts"
+        ],
+        "summary": "Get Venue Metrics",
+        "description": "Return aggregate metrics for each selected venue (bar chart).",
+        "operationId": "get_venue_metrics_api_charts_venue_metrics_get",
+        "parameters": [
+          {
+            "name": "venue_type",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^(journal|conference)$",
+              "title": "Venue Type"
+            }
+          },
+          {
+            "name": "venue_ids",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "integer"
+              },
+              "minItems": 1,
+              "maxItems": 20,
+              "title": "Venue Ids"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/VenueMetricsPoint"
+                  },
+                  "title": "Response Get Venue Metrics Api Charts Venue Metrics Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/charts/authors-vs-articles-scatter": {
+      "get": {
+        "tags": [
+          "charts"
+        ],
+        "summary": "Get Authors Vs Articles Scatter",
+        "description": "Return per-venue scatter points pairing avg articles/yr with avg authors/article.\n\nAccepts ``minimum_articles`` to discard sparse venues and\n``rank_or_quartile`` to restrict the plot to a single ranking band.",
+        "operationId": "get_authors_vs_articles_scatter_api_charts_authors_vs_articles_scatter_get",
+        "parameters": [
+          {
+            "name": "venue_type",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^(journal|conference)$",
+              "title": "Venue Type"
+            }
+          },
+          {
+            "name": "maximum_points",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 10000,
+              "minimum": 1,
+              "default": 5000,
+              "title": "Maximum Points"
+            }
+          },
+          {
+            "name": "minimum_articles",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "default": 0,
+              "title": "Minimum Articles"
+            }
+          },
+          {
+            "name": "rank_or_quartile",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "minLength": 1
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Rank Or Quartile"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/AuthorsVsArticlesPoint"
+                  },
+                  "title": "Response Get Authors Vs Articles Scatter Api Charts Authors Vs Articles Scatter Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/charts/journal-metrics": {
+      "get": {
+        "tags": [
+          "charts"
+        ],
+        "summary": "Get Journal Metrics",
+        "description": "Return one numeric metric tuple per journal for scatter plotting.\n\nAll free-text filters are substring matches; the response includes\n``publisher``, ``best_quartile`` and ``best_subject_area`` so the UI\ncan colour points by any of those categorical dimensions.",
+        "operationId": "get_journal_metrics_api_charts_journal_metrics_get",
+        "parameters": [
+          {
+            "name": "best_subject_area",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "minLength": 1
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Best Subject Area"
+            }
+          },
+          {
+            "name": "best_quartile",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "pattern": "^Q[1-4]$"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Best Quartile"
+            }
+          },
+          {
+            "name": "publisher",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "minLength": 1
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Publisher"
+            }
+          },
+          {
+            "name": "maximum_points",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 10000,
+              "minimum": 1,
+              "default": 5000,
+              "title": "Maximum Points"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/JournalMetricPoint"
+                  },
+                  "title": "Response Get Journal Metrics Api Charts Journal Metrics Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/health": {
+      "get": {
+        "tags": [
+          "meta"
+        ],
+        "summary": "Health Check",
+        "description": "Liveness probe for orchestration and uptime monitors.",
+        "operationId": "health_check_health_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": {
+                    "type": "string"
+                  },
+                  "type": "object",
+                  "title": "Response Health Check Health Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "AuthorArticle": {
+        "properties": {
+          "article_id": {
+            "type": "integer",
+            "title": "Article Id"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "year": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Year"
+          },
+          "venue_type": {
+            "type": "string",
+            "title": "Venue Type"
+          },
+          "venue_id": {
+            "type": "integer",
+            "title": "Venue Id"
+          },
+          "venue_title": {
+            "type": "string",
+            "title": "Venue Title"
+          }
+        },
+        "type": "object",
+        "required": [
+          "article_id",
+          "title",
+          "venue_type",
+          "venue_id",
+          "venue_title"
+        ],
+        "title": "AuthorArticle",
+        "description": "Single article authored by the user, regardless of venue type."
+      },
+      "AuthorProfile": {
+        "properties": {
+          "author_id": {
+            "type": "integer",
+            "title": "Author Id"
+          },
+          "author_name": {
+            "type": "string",
+            "title": "Author Name"
+          },
+          "total_articles": {
+            "type": "integer",
+            "title": "Total Articles"
+          },
+          "earliest_year": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Earliest Year"
+          },
+          "latest_year": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Latest Year"
+          },
+          "average_articles_per_year": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Average Articles Per Year"
+          }
+        },
+        "type": "object",
+        "required": [
+          "author_id",
+          "author_name",
+          "total_articles"
+        ],
+        "title": "AuthorProfile",
+        "description": "Full profile aggregating an author's publication record."
+      },
+      "AuthorSummary": {
+        "properties": {
+          "author_id": {
+            "type": "integer",
+            "title": "Author Id"
+          },
+          "author_name": {
+            "type": "string",
+            "title": "Author Name"
+          },
+          "total_articles": {
+            "type": "integer",
+            "title": "Total Articles",
+            "default": 0
+          },
+          "earliest_year": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Earliest Year"
+          },
+          "latest_year": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Latest Year"
+          }
+        },
+        "type": "object",
+        "required": [
+          "author_id",
+          "author_name"
+        ],
+        "title": "AuthorSummary",
+        "description": "Lightweight projection used by search and list endpoints.\n\nIncludes aggregate counts so the browse table can rank authors by\noutput without the caller having to follow a profile link."
+      },
+      "AuthorYearlyStatistic": {
+        "properties": {
+          "year": {
+            "type": "integer",
+            "title": "Year"
+          },
+          "articles_count": {
+            "type": "integer",
+            "title": "Articles Count"
+          }
+        },
+        "type": "object",
+        "required": [
+          "year",
+          "articles_count"
+        ],
+        "title": "AuthorYearlyStatistic",
+        "description": "One bucket of an author's per-year publication count."
+      },
+      "AuthorsVsArticlesPoint": {
+        "properties": {
+          "venue_id": {
+            "type": "integer",
+            "title": "Venue Id"
+          },
+          "venue_title": {
+            "type": "string",
+            "title": "Venue Title"
+          },
+          "rank_or_quartile": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rank Or Quartile"
+          },
+          "average_articles_per_year": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Average Articles Per Year"
+          },
+          "average_authors_per_article_overall": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Average Authors Per Article Overall"
+          },
+          "total_articles": {
+            "type": "integer",
+            "title": "Total Articles"
+          }
+        },
+        "type": "object",
+        "required": [
+          "venue_id",
+          "venue_title",
+          "total_articles"
+        ],
+        "title": "AuthorsVsArticlesPoint",
+        "description": "One scatter-plot point per venue, articles per year vs authors per article."
+      },
+      "ConferenceArticle": {
+        "properties": {
+          "article_id": {
+            "type": "integer",
+            "title": "Article Id"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "year": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Year"
+          },
+          "pages": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Pages"
+          },
+          "url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Url"
+          }
+        },
+        "type": "object",
+        "required": [
+          "article_id",
+          "title"
+        ],
+        "title": "ConferenceArticle",
+        "description": "Single article presented at a conference."
+      },
+      "ConferenceProfile": {
+        "properties": {
+          "conference_id": {
+            "type": "integer",
+            "title": "Conference Id"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "acronym": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Acronym"
+          },
+          "rank_value": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rank Value"
+          },
+          "primary_for": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Primary For"
+          },
+          "primary_for_description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Primary For Description"
+          },
+          "total_articles": {
+            "type": "integer",
+            "title": "Total Articles"
+          },
+          "earliest_year": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Earliest Year"
+          },
+          "latest_year": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Latest Year"
+          },
+          "distinct_authors_total": {
+            "type": "integer",
+            "title": "Distinct Authors Total"
+          },
+          "average_articles_per_year": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Average Articles Per Year"
+          },
+          "average_authors_per_article_overall": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Average Authors Per Article Overall"
+          }
+        },
+        "type": "object",
+        "required": [
+          "conference_id",
+          "title",
+          "total_articles",
+          "distinct_authors_total"
+        ],
+        "title": "ConferenceProfile",
+        "description": "Full profile combining iCore ranking columns with aggregate stats."
+      },
+      "ConferenceSummary": {
+        "properties": {
+          "conference_id": {
+            "type": "integer",
+            "title": "Conference Id"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "acronym": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Acronym"
+          },
+          "rank_value": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rank Value"
+          },
+          "primary_for": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Primary For"
+          },
+          "primary_for_description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Primary For Description"
+          }
+        },
+        "type": "object",
+        "required": [
+          "conference_id",
+          "title"
+        ],
+        "title": "ConferenceSummary",
+        "description": "Lightweight projection used by list endpoints."
+      },
+      "ConferenceYearlyStatistic": {
+        "properties": {
+          "year": {
+            "type": "integer",
+            "title": "Year"
+          },
+          "articles_count": {
+            "type": "integer",
+            "title": "Articles Count"
+          },
+          "distinct_authors": {
+            "type": "integer",
+            "title": "Distinct Authors"
+          },
+          "total_authors": {
+            "type": "integer",
+            "title": "Total Authors"
+          },
+          "average_authors_per_article": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Average Authors Per Article"
+          }
+        },
+        "type": "object",
+        "required": [
+          "year",
+          "articles_count",
+          "distinct_authors",
+          "total_authors"
+        ],
+        "title": "ConferenceYearlyStatistic",
+        "description": "One bucket of the conference's per-year aggregate statistics."
+      },
+      "CorpusTotalsResponse": {
+        "properties": {
+          "total_articles": {
+            "type": "integer",
+            "title": "Total Articles"
+          },
+          "total_journal_articles": {
+            "type": "integer",
+            "title": "Total Journal Articles"
+          },
+          "total_conference_articles": {
+            "type": "integer",
+            "title": "Total Conference Articles"
+          },
+          "total_authors": {
+            "type": "integer",
+            "title": "Total Authors"
+          },
+          "total_journals": {
+            "type": "integer",
+            "title": "Total Journals"
+          },
+          "total_conferences": {
+            "type": "integer",
+            "title": "Total Conferences"
+          },
+          "earliest_year": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Earliest Year"
+          },
+          "latest_year": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Latest Year"
+          }
+        },
+        "type": "object",
+        "required": [
+          "total_articles",
+          "total_journal_articles",
+          "total_conference_articles",
+          "total_authors",
+          "total_journals",
+          "total_conferences"
+        ],
+        "title": "CorpusTotalsResponse",
+        "description": "Top-line counts for the entire integrated dataset.\n\nThe eight values come from the single-row ``view_corpus_totals`` view\nand feed the headline KPI tiles on the landing and dashboard pages.\n``earliest_year`` and ``latest_year`` describe the temporal span of\narticles whose year is known and non-null."
+      },
+      "FieldOfResearchOption": {
+        "properties": {
+          "code": {
+            "type": "string",
+            "title": "Code"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          }
+        },
+        "type": "object",
+        "required": [
+          "code"
+        ],
+        "title": "FieldOfResearchOption",
+        "description": "One FoR code with its human-readable description."
+      },
+      "FieldOfResearchYearlyEntry": {
+        "properties": {
+          "primary_for": {
+            "type": "string",
+            "title": "Primary For"
+          },
+          "primary_for_description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Primary For Description"
+          },
+          "year": {
+            "type": "integer",
+            "title": "Year"
+          },
+          "distinct_conferences": {
+            "type": "integer",
+            "title": "Distinct Conferences"
+          },
+          "articles_count": {
+            "type": "integer",
+            "title": "Articles Count"
+          }
+        },
+        "type": "object",
+        "required": [
+          "primary_for",
+          "year",
+          "distinct_conferences",
+          "articles_count"
+        ],
+        "title": "FieldOfResearchYearlyEntry",
+        "description": "Row for the Field of Research line chart."
+      },
+      "FilterOptionsResponse": {
+        "properties": {
+          "subject_areas": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Subject Areas"
+          },
+          "publishers": {
+            "items": {
+              "$ref": "#/components/schemas/PublisherOption"
+            },
+            "type": "array",
+            "title": "Publishers"
+          },
+          "fields_of_research": {
+            "items": {
+              "$ref": "#/components/schemas/FieldOfResearchOption"
+            },
+            "type": "array",
+            "title": "Fields Of Research"
+          },
+          "conference_ranks": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Conference Ranks"
+          }
+        },
+        "type": "object",
+        "required": [
+          "subject_areas",
+          "publishers",
+          "fields_of_research",
+          "conference_ranks"
+        ],
+        "title": "FilterOptionsResponse",
+        "description": "Distinct values feeding every dropdown in the playground sidebar."
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "type": "array",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "title": "HTTPValidationError"
+      },
+      "JournalArticle": {
+        "properties": {
+          "article_id": {
+            "type": "integer",
+            "title": "Article Id"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "year": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Year"
+          },
+          "pages": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Pages"
+          },
+          "url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Url"
+          }
+        },
+        "type": "object",
+        "required": [
+          "article_id",
+          "title"
+        ],
+        "title": "JournalArticle",
+        "description": "Single article published in a journal."
+      },
+      "JournalMetricPoint": {
+        "properties": {
+          "journal_id": {
+            "type": "integer",
+            "title": "Journal Id"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "publisher": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Publisher"
+          },
+          "best_quartile": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Best Quartile"
+          },
+          "best_subject_area": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Best Subject Area"
+          },
+          "total_documents": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Total Documents"
+          },
+          "total_documents_3y": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Total Documents 3Y"
+          },
+          "total_references": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Total References"
+          },
+          "total_citations_3y": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Total Citations 3Y"
+          },
+          "citable_documents_3y": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Citable Documents 3Y"
+          },
+          "citations_per_document_2y": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Citations Per Document 2Y"
+          },
+          "references_per_document": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "References Per Document"
+          },
+          "sjr_index": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sjr Index"
+          },
+          "citation_score": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Citation Score"
+          },
+          "h_index": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "H Index"
+          }
+        },
+        "type": "object",
+        "required": [
+          "journal_id",
+          "title"
+        ],
+        "title": "JournalMetricPoint",
+        "description": "Single point in the journal-metrics scatter plot."
+      },
+      "JournalProfile": {
+        "properties": {
+          "journal_id": {
+            "type": "integer",
+            "title": "Journal Id"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "publisher": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Publisher"
+          },
+          "country": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Country"
+          },
+          "best_quartile": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Best Quartile"
+          },
+          "best_subject_area": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Best Subject Area"
+          },
+          "sjr_index": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sjr Index"
+          },
+          "citation_score": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Citation Score"
+          },
+          "h_index": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "H Index"
+          },
+          "total_documents": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Total Documents"
+          },
+          "total_documents_3y": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Total Documents 3Y"
+          },
+          "total_references": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Total References"
+          },
+          "total_citations_3y": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Total Citations 3Y"
+          },
+          "citable_documents_3y": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Citable Documents 3Y"
+          },
+          "citations_per_document_2y": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Citations Per Document 2Y"
+          },
+          "references_per_document": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "References Per Document"
+          },
+          "total_articles": {
+            "type": "integer",
+            "title": "Total Articles"
+          },
+          "earliest_year": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Earliest Year"
+          },
+          "latest_year": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Latest Year"
+          },
+          "distinct_authors_total": {
+            "type": "integer",
+            "title": "Distinct Authors Total"
+          },
+          "average_articles_per_year": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Average Articles Per Year"
+          },
+          "average_authors_per_article_overall": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Average Authors Per Article Overall"
+          }
+        },
+        "type": "object",
+        "required": [
+          "journal_id",
+          "title",
+          "total_articles",
+          "distinct_authors_total"
+        ],
+        "title": "JournalProfile",
+        "description": "Full profile combining ranking metrics and aggregate statistics."
+      },
+      "JournalSummary": {
+        "properties": {
+          "journal_id": {
+            "type": "integer",
+            "title": "Journal Id"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "publisher": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Publisher"
+          },
+          "best_quartile": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Best Quartile"
+          },
+          "best_subject_area": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Best Subject Area"
+          },
+          "sjr_index": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sjr Index"
+          }
+        },
+        "type": "object",
+        "required": [
+          "journal_id",
+          "title"
+        ],
+        "title": "JournalSummary",
+        "description": "Lightweight projection used by list endpoints."
+      },
+      "JournalYearlyStatistic": {
+        "properties": {
+          "year": {
+            "type": "integer",
+            "title": "Year"
+          },
+          "articles_count": {
+            "type": "integer",
+            "title": "Articles Count"
+          },
+          "distinct_authors": {
+            "type": "integer",
+            "title": "Distinct Authors"
+          },
+          "total_authors": {
+            "type": "integer",
+            "title": "Total Authors"
+          },
+          "average_authors_per_article": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Average Authors Per Article"
+          }
+        },
+        "type": "object",
+        "required": [
+          "year",
+          "articles_count",
+          "distinct_authors",
+          "total_authors"
+        ],
+        "title": "JournalYearlyStatistic",
+        "description": "One bucket of the journal's per-year aggregate statistics."
+      },
+      "PaginatedResponse_AuthorArticle_": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/AuthorArticle"
+            },
+            "type": "array",
+            "title": "Items"
+          },
+          "page": {
+            "type": "integer",
+            "minimum": 1.0,
+            "title": "Page"
+          },
+          "page_size": {
+            "type": "integer",
+            "maximum": 200.0,
+            "minimum": 1.0,
+            "title": "Page Size"
+          },
+          "total_items": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Total Items"
+          }
+        },
+        "type": "object",
+        "required": [
+          "items",
+          "page",
+          "page_size",
+          "total_items"
+        ],
+        "title": "PaginatedResponse[AuthorArticle]"
+      },
+      "PaginatedResponse_AuthorSummary_": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/AuthorSummary"
+            },
+            "type": "array",
+            "title": "Items"
+          },
+          "page": {
+            "type": "integer",
+            "minimum": 1.0,
+            "title": "Page"
+          },
+          "page_size": {
+            "type": "integer",
+            "maximum": 200.0,
+            "minimum": 1.0,
+            "title": "Page Size"
+          },
+          "total_items": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Total Items"
+          }
+        },
+        "type": "object",
+        "required": [
+          "items",
+          "page",
+          "page_size",
+          "total_items"
+        ],
+        "title": "PaginatedResponse[AuthorSummary]"
+      },
+      "PaginatedResponse_ConferenceArticle_": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/ConferenceArticle"
+            },
+            "type": "array",
+            "title": "Items"
+          },
+          "page": {
+            "type": "integer",
+            "minimum": 1.0,
+            "title": "Page"
+          },
+          "page_size": {
+            "type": "integer",
+            "maximum": 200.0,
+            "minimum": 1.0,
+            "title": "Page Size"
+          },
+          "total_items": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Total Items"
+          }
+        },
+        "type": "object",
+        "required": [
+          "items",
+          "page",
+          "page_size",
+          "total_items"
+        ],
+        "title": "PaginatedResponse[ConferenceArticle]"
+      },
+      "PaginatedResponse_ConferenceSummary_": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/ConferenceSummary"
+            },
+            "type": "array",
+            "title": "Items"
+          },
+          "page": {
+            "type": "integer",
+            "minimum": 1.0,
+            "title": "Page"
+          },
+          "page_size": {
+            "type": "integer",
+            "maximum": 200.0,
+            "minimum": 1.0,
+            "title": "Page Size"
+          },
+          "total_items": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Total Items"
+          }
+        },
+        "type": "object",
+        "required": [
+          "items",
+          "page",
+          "page_size",
+          "total_items"
+        ],
+        "title": "PaginatedResponse[ConferenceSummary]"
+      },
+      "PaginatedResponse_JournalArticle_": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/JournalArticle"
+            },
+            "type": "array",
+            "title": "Items"
+          },
+          "page": {
+            "type": "integer",
+            "minimum": 1.0,
+            "title": "Page"
+          },
+          "page_size": {
+            "type": "integer",
+            "maximum": 200.0,
+            "minimum": 1.0,
+            "title": "Page Size"
+          },
+          "total_items": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Total Items"
+          }
+        },
+        "type": "object",
+        "required": [
+          "items",
+          "page",
+          "page_size",
+          "total_items"
+        ],
+        "title": "PaginatedResponse[JournalArticle]"
+      },
+      "PaginatedResponse_JournalSummary_": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/JournalSummary"
+            },
+            "type": "array",
+            "title": "Items"
+          },
+          "page": {
+            "type": "integer",
+            "minimum": 1.0,
+            "title": "Page"
+          },
+          "page_size": {
+            "type": "integer",
+            "maximum": 200.0,
+            "minimum": 1.0,
+            "title": "Page Size"
+          },
+          "total_items": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Total Items"
+          }
+        },
+        "type": "object",
+        "required": [
+          "items",
+          "page",
+          "page_size",
+          "total_items"
+        ],
+        "title": "PaginatedResponse[JournalSummary]"
+      },
+      "PaginatedResponse_YearArticle_": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/YearArticle"
+            },
+            "type": "array",
+            "title": "Items"
+          },
+          "page": {
+            "type": "integer",
+            "minimum": 1.0,
+            "title": "Page"
+          },
+          "page_size": {
+            "type": "integer",
+            "maximum": 200.0,
+            "minimum": 1.0,
+            "title": "Page Size"
+          },
+          "total_items": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Total Items"
+          }
+        },
+        "type": "object",
+        "required": [
+          "items",
+          "page",
+          "page_size",
+          "total_items"
+        ],
+        "title": "PaginatedResponse[YearArticle]"
+      },
+      "PaginatedResponse_YearConferenceEntry_": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/YearConferenceEntry"
+            },
+            "type": "array",
+            "title": "Items"
+          },
+          "page": {
+            "type": "integer",
+            "minimum": 1.0,
+            "title": "Page"
+          },
+          "page_size": {
+            "type": "integer",
+            "maximum": 200.0,
+            "minimum": 1.0,
+            "title": "Page Size"
+          },
+          "total_items": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Total Items"
+          }
+        },
+        "type": "object",
+        "required": [
+          "items",
+          "page",
+          "page_size",
+          "total_items"
+        ],
+        "title": "PaginatedResponse[YearConferenceEntry]"
+      },
+      "PaginatedResponse_YearJournalEntry_": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/YearJournalEntry"
+            },
+            "type": "array",
+            "title": "Items"
+          },
+          "page": {
+            "type": "integer",
+            "minimum": 1.0,
+            "title": "Page"
+          },
+          "page_size": {
+            "type": "integer",
+            "maximum": 200.0,
+            "minimum": 1.0,
+            "title": "Page Size"
+          },
+          "total_items": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Total Items"
+          }
+        },
+        "type": "object",
+        "required": [
+          "items",
+          "page",
+          "page_size",
+          "total_items"
+        ],
+        "title": "PaginatedResponse[YearJournalEntry]"
+      },
+      "PaperAuthor": {
+        "properties": {
+          "author_id": {
+            "type": "integer",
+            "title": "Author Id"
+          },
+          "author_name": {
+            "type": "string",
+            "title": "Author Name"
+          }
+        },
+        "type": "object",
+        "required": [
+          "author_id",
+          "author_name"
+        ],
+        "title": "PaperAuthor",
+        "description": "Author entry inside a paper detail response."
+      },
+      "PaperDetails": {
+        "properties": {
+          "article_id": {
+            "type": "integer",
+            "title": "Article Id"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "year": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Year"
+          },
+          "pages": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Pages"
+          },
+          "url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Url"
+          },
+          "venue_type": {
+            "type": "string",
+            "title": "Venue Type"
+          },
+          "venue_id": {
+            "type": "integer",
+            "title": "Venue Id"
+          },
+          "venue_title": {
+            "type": "string",
+            "title": "Venue Title"
+          },
+          "authors": {
+            "items": {
+              "$ref": "#/components/schemas/PaperAuthor"
+            },
+            "type": "array",
+            "title": "Authors"
+          }
+        },
+        "type": "object",
+        "required": [
+          "article_id",
+          "title",
+          "venue_type",
+          "venue_id",
+          "venue_title",
+          "authors"
+        ],
+        "title": "PaperDetails",
+        "description": "Full information about a single article including its authors."
+      },
+      "PublisherOption": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "journal_count": {
+            "type": "integer",
+            "title": "Journal Count"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "journal_count"
+        ],
+        "title": "PublisherOption",
+        "description": "One publisher with the count of journals it owns."
+      },
+      "PublisherQuartileEntry": {
+        "properties": {
+          "publisher": {
+            "type": "string",
+            "title": "Publisher"
+          },
+          "best_quartile": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Best Quartile"
+          },
+          "journal_count": {
+            "type": "integer",
+            "title": "Journal Count"
+          }
+        },
+        "type": "object",
+        "required": [
+          "publisher",
+          "journal_count"
+        ],
+        "title": "PublisherQuartileEntry",
+        "description": "Row for the publisher bar chart."
+      },
+      "SubjectAreaYearlyEntry": {
+        "properties": {
+          "best_subject_area": {
+            "type": "string",
+            "title": "Best Subject Area"
+          },
+          "year": {
+            "type": "integer",
+            "title": "Year"
+          },
+          "distinct_journals": {
+            "type": "integer",
+            "title": "Distinct Journals"
+          },
+          "articles_count": {
+            "type": "integer",
+            "title": "Articles Count"
+          }
+        },
+        "type": "object",
+        "required": [
+          "best_subject_area",
+          "year",
+          "distinct_journals",
+          "articles_count"
+        ],
+        "title": "SubjectAreaYearlyEntry",
+        "description": "Row for the BestSubjectArea line chart."
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Location"
+          },
+          "msg": {
+            "type": "string",
+            "title": "Message"
+          },
+          "type": {
+            "type": "string",
+            "title": "Error Type"
+          },
+          "input": {
+            "title": "Input"
+          },
+          "ctx": {
+            "type": "object",
+            "title": "Context"
+          }
+        },
+        "type": "object",
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError"
+      },
+      "VenueComparisonPoint": {
+        "properties": {
+          "venue_id": {
+            "type": "integer",
+            "title": "Venue Id"
+          },
+          "venue_title": {
+            "type": "string",
+            "title": "Venue Title"
+          },
+          "year": {
+            "type": "integer",
+            "title": "Year"
+          },
+          "articles_count": {
+            "type": "integer",
+            "title": "Articles Count"
+          },
+          "distinct_authors": {
+            "type": "integer",
+            "title": "Distinct Authors"
+          },
+          "total_authors": {
+            "type": "integer",
+            "title": "Total Authors"
+          }
+        },
+        "type": "object",
+        "required": [
+          "venue_id",
+          "venue_title",
+          "year",
+          "articles_count",
+          "distinct_authors",
+          "total_authors"
+        ],
+        "title": "VenueComparisonPoint",
+        "description": "Single (venue, year) row inside the multi-venue line chart payload."
+      },
+      "VenueMetricsPoint": {
+        "properties": {
+          "venue_id": {
+            "type": "integer",
+            "title": "Venue Id"
+          },
+          "venue_title": {
+            "type": "string",
+            "title": "Venue Title"
+          },
+          "total_articles": {
+            "type": "integer",
+            "title": "Total Articles"
+          },
+          "average_articles_per_year": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Average Articles Per Year"
+          },
+          "average_distinct_authors_per_year": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Average Distinct Authors Per Year"
+          }
+        },
+        "type": "object",
+        "required": [
+          "venue_id",
+          "venue_title",
+          "total_articles"
+        ],
+        "title": "VenueMetricsPoint",
+        "description": "Per-venue aggregates feeding the multi-venue bar chart.\n\nMatches the brief's bar chart spec: total published articles, average\narticles per year, and average distinct authors per year."
+      },
+      "YearArticle": {
+        "properties": {
+          "article_id": {
+            "type": "integer",
+            "title": "Article Id"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "venue_type": {
+            "type": "string",
+            "title": "Venue Type"
+          },
+          "venue_id": {
+            "type": "integer",
+            "title": "Venue Id"
+          },
+          "venue_title": {
+            "type": "string",
+            "title": "Venue Title"
+          },
+          "pages": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Pages"
+          },
+          "url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Url"
+          }
+        },
+        "type": "object",
+        "required": [
+          "article_id",
+          "title",
+          "venue_type",
+          "venue_id",
+          "venue_title"
+        ],
+        "title": "YearArticle",
+        "description": "Article published in a given year, regardless of venue type."
+      },
+      "YearConferenceEntry": {
+        "properties": {
+          "conference_id": {
+            "type": "integer",
+            "title": "Conference Id"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "acronym": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Acronym"
+          },
+          "rank_value": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rank Value"
+          },
+          "primary_for": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Primary For"
+          },
+          "primary_for_description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Primary For Description"
+          },
+          "articles_in_year": {
+            "type": "integer",
+            "title": "Articles In Year"
+          }
+        },
+        "type": "object",
+        "required": [
+          "conference_id",
+          "title",
+          "articles_in_year"
+        ],
+        "title": "YearConferenceEntry",
+        "description": "Conference that held at least one paper in the requested year."
+      },
+      "YearJournalEntry": {
+        "properties": {
+          "journal_id": {
+            "type": "integer",
+            "title": "Journal Id"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "publisher": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Publisher"
+          },
+          "best_quartile": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Best Quartile"
+          },
+          "best_subject_area": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Best Subject Area"
+          },
+          "sjr_index": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sjr Index"
+          },
+          "articles_in_year": {
+            "type": "integer",
+            "title": "Articles In Year"
+          }
+        },
+        "type": "object",
+        "required": [
+          "journal_id",
+          "title",
+          "articles_in_year"
+        ],
+        "title": "YearJournalEntry",
+        "description": "Journal that published at least one article in the requested year."
+      },
+      "YearSummary": {
+        "properties": {
+          "year": {
+            "type": "integer",
+            "title": "Year"
+          },
+          "journal_articles": {
+            "type": "integer",
+            "title": "Journal Articles"
+          },
+          "conference_articles": {
+            "type": "integer",
+            "title": "Conference Articles"
+          },
+          "total_articles": {
+            "type": "integer",
+            "title": "Total Articles"
+          },
+          "distinct_journals": {
+            "type": "integer",
+            "title": "Distinct Journals"
+          },
+          "distinct_conferences": {
+            "type": "integer",
+            "title": "Distinct Conferences"
+          },
+          "distinct_authors": {
+            "type": "integer",
+            "title": "Distinct Authors"
+          },
+          "total_authors": {
+            "type": "integer",
+            "title": "Total Authors"
+          }
+        },
+        "type": "object",
+        "required": [
+          "year",
+          "journal_articles",
+          "conference_articles",
+          "total_articles",
+          "distinct_journals",
+          "distinct_conferences",
+          "distinct_authors",
+          "total_authors"
+        ],
+        "title": "YearSummary",
+        "description": "Aggregate counts for a single publication year."
+      }
+    }
+  }
+}

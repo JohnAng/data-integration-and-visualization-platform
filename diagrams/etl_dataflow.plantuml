@@ -1,0 +1,127 @@
+@startuml etl_dataflow
+' ----------------------------------------------------------------------
+' Logical ETL data flow — UoI DMDW'02 style (moderate detail).
+' Data stores are cylinders, activities are yellow boxes with the
+' «activityETL» stereotype, parameters are notes attached above each
+' activity. Compare with Vassiliadis "Blueprints for ETL design",
+' Figure 1.2 and Figure 2.5.
+' ----------------------------------------------------------------------
+!theme plain
+skinparam defaultFontName "Inter"
+skinparam shadowing false
+skinparam ArrowColor #14213D
+skinparam ArrowFontColor #5F6470
+skinparam linetype ortho
+
+skinparam database {
+    BorderColor #14213D
+    BackgroundColor #C8E6C9
+    FontColor #1A1A1A
+}
+skinparam component {
+    BorderColor #14213D
+    BackgroundColor #FFF2A8
+    FontColor #1A1A1A
+}
+skinparam note {
+    BorderColor #C8C0AE
+    BackgroundColor #F5F1E8
+    FontColor #1A1A1A
+}
+
+title ETL logical data flow — DBLP + iCore26 + Kaggle Scimago to MySQL warehouse
+
+' ===== Source data stores (cylinders) =====
+database "dblp\njournals.csv" as dblp_j
+database "dblp\nconferences.csv" as dblp_c
+database "icore26\nrankings.csv" as icore
+database "kaggle\nrankings.csv" as kaggle
+
+' ===== Phase II transformer activities =====
+component "«activityETL»\nread_csv" as read_dblp_j
+component "«activityETL»\nread_csv" as read_dblp_c
+component "«activityETL»\nread_csv" as read_icore
+component "«activityETL»\nread_csv" as read_kaggle
+
+component "«activityETL»\nnormalise_title" as norm_title
+component "«activityETL»\nnormalise_acronym" as norm_acronym
+component "«activityETL»\nsplit_authors" as split_authors
+
+component "«activityETL»\nacronym_join" as acro_join
+component "«activityETL»\nfuzzy_match" as fuzzy_match
+component "«activityETL»\ndedup_authors" as dedup_authors
+
+component "«activityETL»\nvalidate" as validate
+component "«activityETL»\nassign_surrogate_keys" as assign_sk
+
+component "«activityETL»\nwrite_csv" as write_csv
+
+' ===== Exported intermediate data stores =====
+database "exports/\nlookup_*.csv\nfact_*.csv\nbridge_*.csv" as exports_csv
+database "exports/\nrejection_log.csv" as rejection_csv
+
+' ===== Phase IV SQL load activities =====
+component "«activityETL»\nschema_ddl\n01_schema.sql" as schema_ddl
+component "«activityETL»\nload_data_infile\n02_load.sql" as load_infile
+component "«activityETL»\nviews_and_materialised\n03_views.sql" as views_mat
+
+' ===== Target warehouse =====
+database "mye030 schema\nMySQL 8.0 / InnoDB / utf8mb4" as mysql
+
+' ===== Parameter notes (attached above each activity) =====
+note top of norm_title : Param: lowercase + strip\n+ expand abbreviations\n(Trans. to Transactions, ...)
+note top of norm_acronym : Param: lowercase\n+ alphanumeric only
+note top of split_authors : Param: separator = "|"
+note top of acro_join : Param: case-insensitive\nexact match\non normalised acronym
+note top of fuzzy_match : Param: rapidfuzz\ntoken_set_ratio >= 85\non normalised title
+note top of dedup_authors : Param: drop_duplicates\nkeep first
+note top of validate : Param: title NOT NULL\nyear in [1900, 2030]\nauthors non-empty
+note top of assign_sk : Param: INT UNSIGNED PK\nfor every lookup entity
+note top of write_csv : Param: null_value = "\\N"\n(LOAD DATA INFILE sentinel)
+note bottom of load_infile : Param: LOAD DATA LOCAL INFILE\nLookups -> Facts -> Bridges\n-> Rejection (FK order)
+note bottom of views_mat : Param: 11 CREATE VIEW\n+ 6 INSERT FROM SELECT\ninto materialised tables
+
+' ===== Source to read =====
+dblp_j --> read_dblp_j
+dblp_c --> read_dblp_c
+icore --> read_icore
+kaggle --> read_kaggle
+
+' ===== Per-pipeline normalisation =====
+read_dblp_j --> norm_title : title
+read_dblp_c --> norm_acronym : booktitle
+read_dblp_j --> split_authors : authors
+read_dblp_c --> split_authors : authors
+read_icore --> norm_acronym : acronym
+read_kaggle --> norm_title : title
+
+' ===== Entity resolution =====
+norm_acronym --> acro_join
+norm_title --> fuzzy_match
+split_authors --> dedup_authors
+
+' ===== Validation and key assignment =====
+acro_join --> validate
+fuzzy_match --> validate
+dedup_authors --> validate
+validate --> assign_sk : valid rows
+validate --> rejection_csv : invalid rows
+
+' ===== Export =====
+assign_sk --> write_csv
+write_csv --> exports_csv
+
+' ===== SQL load chain =====
+schema_ddl --> mysql : DDL
+exports_csv --> load_infile
+load_infile --> mysql : tuples
+views_mat --> mysql : views + materialised
+rejection_csv --> load_infile : included
+
+legend bottom
+  Cylinders = data stores. Yellow rectangles = ETL activities («activityETL»).
+  Parameter notes are attached above each activity (UoI logical design notation, Vassiliadis "Blueprints4ETL", Figure 2.5).
+  Phase I = read CSV. Phase II = normalise, resolve, validate, assign SKs. Phase III = write CSV. Phase IV = SQL DDL + LOAD + views.
+endlegend
+
+@enduml

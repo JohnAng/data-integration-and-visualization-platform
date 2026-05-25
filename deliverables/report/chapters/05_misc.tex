@@ -1,0 +1,290 @@
+\chapter{Λοιπά σχόλια}
+
+\section{Stack επιλογές και trade-offs}
+
+Επιλέξαμε ένα \textbf{modern stack}: Python 3.13 / FastAPI / asyncmy στο
+back-end και React 19 / TypeScript / Vite / TanStack στο front-end. Κάθε
+συστατικό δικαιολογείται παρακάτω.
+
+\begin{itemize}
+    \item \textbf{Python 3.13 + asyncmy}. Επιλέξαμε \texttt{asyncmy} αντί
+          \texttt{aiomysql} γιατί ο πρώτος έχει 4$\times$ throughput με
+          identical API. Ανεξάρτητα από το αν ένα ORM θα ήταν ``πιο εύκολο''
+          --- η εκφώνηση ζητάει \emph{raw SQL}, οπότε δεν τίθεται καν θέμα
+          επιλογής. Επιπλέον, η επιλογή Python για το back-end
+          ευθυγραμμίζεται με τη γλώσσα του ETL pipeline (Polars):
+          αποφεύγουμε την εισαγωγή τρίτης γλώσσας στο project και
+          κρατάμε ομογενές tooling, dependencies και testing
+          infrastructure.
+    \item \textbf{FastAPI + Pydantic v2}. Επιλέξαμε FastAPI για:
+          (α) αυτόματη OpenAPI generation που τροφοδοτεί τους τύπους του
+          front-end, (β) native async support, (γ) ξεκάθαρη separation
+          μεταξύ schema validation και endpoint logic.
+    \item \textbf{React 19 + TypeScript + Vite + TanStack}. Πιο μοντέρνο
+          stack από Angular/Vue που είδαμε στο μάθημα, αλλά απολύτως
+          κατάλληλο για single-page analytical UI με πολλά cached
+          server-state queries. Το TanStack Query χειρίζεται caching,
+          stale-while-revalidate, retry logic και background refetch.
+          Ολο το front-end γράφτηκε σε \textbf{TypeScript}: typed DTOs
+          που αντικατοπτρίζουν τα Pydantic schemas, typed search-params
+          (Zod schemas σε κάθε route), strict null-checking. Ετσι τα
+          contract breaks πιάνονται στο compile time αντί στο runtime.
+    \item \textbf{Visx} αντί Chart.js / Recharts. Το Visx εκθέτει D3
+          primitives ως React components, οπότε χτίσαμε custom chart
+          components με ακριβή έλεγχο σε axis layout, tooltip, hover,
+          drag-to-zoom, clip paths.
+\end{itemize}
+
+\section{Performance σημειώσεις}
+
+Το \texttt{view\_author\_profile} αρχικά γύριζε σε περίπου 3 sec γιατί
+έκανε \texttt{LEFT JOIN} στους \(\sim\)1.1M journal articles
+\texttt{UNION ALL} στους \(\sim\)1.4M conference articles
+\emph{για κάθε query}. Το λύσαμε με \texttt{materialized\_author\_profile}
+που γεμίζει μία φορά μετά το ETL και έχει indexes σε
+(\texttt{total\_articles}, \texttt{author\_name}). Τα authors browse
+queries τώρα τρέχουν σε \(<\)30 ms.
+
+Παρόμοιο pattern για \texttt{materialized\_authors\_vs\_articles\_scatter\_*}:
+ένα DAO query αντί χιλιάδες point-by-point joins ανά request.
+
+\section{Test coverage}
+
+\begin{itemize}
+    \item \textbf{Backend}: 200 pytest tests, 95\% line coverage. Πλήρης
+          integration coverage εναντίον πραγματικού MySQL container
+          (μέσω \texttt{conftest.py} που recreate το \texttt{mye030\_test}
+          σε κάθε session).
+    \item \textbf{Frontend unit / integration}: 160 vitest tests με
+          MSW mocking. 39 test files. Καλύπτουν components, hooks,
+          API client, routes και σενάρια filtering.
+    \item \textbf{Frontend E2E}: ~50 Playwright tests σε 3 spec files
+          (\texttt{app.spec.ts}, \texttt{charts.spec.ts},
+          \texttt{report\_screenshots.spec.ts}) εναντίον live dev
+          server. Καλύπτουν τα chart variants, τις 13 routes,
+          σύστημα filters, sort/search interactions, zoom drag και reset,
+          legend toggle, checkbox multi-select. Το
+          \texttt{report\_screenshots.spec.ts} παράγει αυτόματα τα PNGs
+          που χρησιμοποιούνται στο Κεφάλαιο 4.
+\end{itemize}
+
+\section{Στρατηγική joins και indexes}
+
+Επειδή κάθε analytical query του front-end ενώνει fact με lookup ---
+και συχνά περνά μέσα από bridge --- οι αποφάσεις γύρω από τα joins
+και τα indexes είναι κρίσιμες.
+
+\subsection{Join patterns}
+
+\begin{itemize}\setlength{\itemsep}{0.2em}
+    \item \textbf{Profile σελίδα} (journal/conference):
+          \texttt{fact\_*\_articles INNER JOIN lookup\_*}. INNER γιατί
+          το FK εγγυάται την ύπαρξη του parent venue.
+    \item \textbf{Article authors list}:
+          \texttt{fact\_*\_articles LEFT JOIN bridge\_*\_authors LEFT JOIN lookup\_authors}.
+          LEFT για να εμφανίζονται και άρθρα χωρίς authors (orphans).
+    \item \textbf{Year article list}:
+          \texttt{fact\_journal\_articles UNION ALL fact\_conference\_articles}
+          (φιλτραρισμένο ανά έτος), μετά INNER JOIN με τα venues.
+          \texttt{UNION ALL} (όχι \texttt{UNION}) γιατί τα δύο fact
+          tables έχουν επικαλυπτόμενα \texttt{article\_id} ranges,
+          οπότε \texttt{UNION} θα έσβηνε γνήσια διακριτές γραμμές.
+    \item \textbf{Author profile}:
+          \texttt{lookup\_authors INNER JOIN materialized\_author\_profile}.
+          Το union των δύο bridges γίνεται μία φορά στο ETL, ποτέ
+          per request.
+    \item \textbf{Charts (subject area, FoR, scatter)}: αναγνώσεις
+          από \texttt{materialized\_*} αντί για on-the-fly aggregate
+          των views.
+\end{itemize}
+
+\subsection{Επιλογές INNER vs LEFT}
+
+Κάθε join διαλέχτηκε με βάση τις εγγυήσεις του FK, όχι αντανακλαστικά:
+
+\begin{itemize}\setlength{\itemsep}{0.2em}
+    \item Λάθος LEFT $\rightarrow$ φουσκωμένος row count, λάθος metrics.
+    \item Λάθος INNER $\rightarrow$ σιωπηρή απώλεια legitimate rows.
+\end{itemize}
+
+\texttt{COUNT(DISTINCT)} εμφανίζεται μόνο μέσα στο materialised path,
+ποτέ στο per-request path.
+
+\subsection{Indexes πέρα από τα PK/FK}
+
+\begin{center}
+\begin{tabular}{@{}p{0.55\textwidth} p{0.40\textwidth}@{}}
+\toprule
+\textbf{Index} & \textbf{Καλύπτει} \\
+\midrule
+\texttt{fact\_journal\_articles (journal\_id, year)}
+& Journal yearly stats, articles list, year-range φίλτρα \\
+\texttt{fact\_conference\_articles (conference\_id, year)}
+& Conference equivalents \\
+\texttt{bridge\_*\_authors (author\_id, article\_id)}
+& Author article list, ETL builds \\
+\texttt{lookup\_journals (best\_subject\_area)},
+\texttt{lookup\_journals (publisher)}
+& Dropdown φίλτρα \\
+\texttt{materialized\_author\_profile (total\_articles DESC, author\_name)}
+& Authors browse default sort χωρίς filesort \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\texttt{EXPLAIN} δείχνει zero ``Using filesort'' για όλα τα default
+sort orders. Οι writes (one-shot ETL load) πληρώνουν το κόστος των
+indexes --- αποδεκτό για read-mostly workload.
+
+\section{Πίνακας trade-offs}
+
+Συνοπτική παρουσίαση όλων των κρίσιμων αποφάσεων αρχιτεκτονικής
+με τα trade-offs τους. Πλήρης ανάλυση (alternatives considered,
+context, consequences) στο \texttt{docs/ARCHITECTURE.md}.
+
+\begin{center}
+\begin{tabular}{@{}p{0.30\textwidth} p{0.32\textwidth} p{0.32\textwidth}@{}}
+\toprule
+\textbf{Απόφαση} & \textbf{Γιατί} & \textbf{Κόστος που δεχτήκαμε} \\
+\midrule
+Raw SQL μέσω asyncmy, χωρίς ORM
+& Απαίτηση εκφώνησης + 4$\times$ throughput vs aiomysql
+& Κάθε endpoint = χειρόγραφο DAO method \\
+\addlinespace
+Wide journal dimension
+& One-row reads, απλά indexes
+& $\sim$170 KB επιπλέον χώρος \\
+\addlinespace
+Materialised aggregates
+& 11--46 s $\rightarrow$ < 0.3 s queries
+& Read-only μεταξύ ETL runs \\
+\addlinespace
+Hybrid entity resolution
+& 100\% precision σε acronyms, recall σε fuzzy titles
+& 81\% conferences unranked (ορατό μέσω \texttt{ranked\_only}) \\
+\addlinespace
+FastAPI + Pydantic v2
+& Δωρεάν OpenAPI, async, RFC 7807 errors
+& Δύο type systems (Pydantic + TS) συντηρούνται με το χέρι \\
+\addlinespace
+Visx πάνω από Recharts
+& Pixel-perfect charts με drag-to-zoom + Voronoi hover
+& Περισσότερος component κώδικας ανά chart \\
+\addlinespace
+URL-driven filters (TanStack)
+& Shareable URLs, browser back, no flicker
+& Schema validation (Zod) σε κάθε route \\
+\addlinespace
+RFC 7807 problem-details
+& Single error envelope, machine-readable
+& Custom handler στο \texttt{api/errors.py} \\
+\addlinespace
+Polars αντί pandas
+& $\sim$10$\times$ faster, lower memory
+& Νεότερο ecosystem \\
+\addlinespace
+Static post-ETL warehouse
+& Ταιριάζει με το read-mostly workload
+& Δεν υπάρχει live ingest, το ETL είναι re-run \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\section{Ενιαίο orchestrator script: \texttt{python run.py}}
+
+Το αρχείο \texttt{run.py} στο repo root είναι ένα stdlib-only
+orchestrator (~250 γραμμές, Python 3.10+, χωρίς third-party deps)
+που αυτο-εντοπίζει τι υπάρχει στον δίσκο και σηκώνει αυτόματα το
+σωστό σενάριο:
+
+\begin{itemize}\setlength{\itemsep}{0.2em}
+    \item \textbf{Σενάριο A}: εάν υπάρχει
+          \texttt{deliverables/db\_backup.sql.gz}, κάνει
+          auto-restore στο first boot ($\sim$2.5 λεπτά).
+    \item \textbf{Σενάριο B}: εάν υπάρχουν μόνο τα raw CSVs στο
+          \texttt{data/}, τρέχει την ETL pipeline μέσα στο backend
+          container και φορτώνει τα 3 SQL scripts ($\sim$5 λεπτά).
+    \item \textbf{Σενάριο C}: εάν δεν υπάρχει τίποτα, εκτυπώνει
+          banner με Drive link + DBLP/iCore/Kaggle URLs και κάνει
+          exit. Καμία σιωπηρή αποτυχία.
+\end{itemize}
+
+Πρόσθετα entry points: \texttt{python run.py -{}-status} (health των
+containers + smoke probes), \texttt{-{}-verify} (data quality
+report), \texttt{-{}-etl} (force ETL), \texttt{-{}-down} (stop with
+volume kept), \texttt{-{}-reset} (stop + wipe).
+
+\section{Δύο τρόποι εκτέλεσης: production vs development}
+
+Η εφαρμογή προσφέρεται με δύο παράλληλους τρόπους εκτέλεσης που
+καλύπτουν διαφορετικές ανάγκες:
+
+\begin{itemize}
+    \item \textbf{Production stack (Path 0)} --- ένα και μόνο
+          \texttt{docker compose up -d -{}-wait} (ή
+          \texttt{python run.py}). Χτίζει τρία images
+          (mye030\_mysql, mye030\_backend, mye030\_frontend) και
+          τα σηκώνει με healthchecks και \texttt{depends\_on}
+          ordering. Το frontend image είναι multi-stage build: το
+          \texttt{vite build} παράγει minified, content-hashed bundle
+          ($\sim$600 KB gzipped) που σερβίρει η nginx 1.27-alpine.
+          Η nginx επιπλέον κάνει reverse-proxy τα
+          \texttt{/api/*}, \texttt{/docs}, \texttt{/redoc},
+          \texttt{/openapi.json} και \texttt{/health} στο backend,
+          οπότε όλο το προϊόν ζει πίσω από ένα μόνο origin (χωρίς
+          ανάγκη για CORS configuration).
+    \item \textbf{Development stack (Paths A/B/C)} ---
+          host-installed Python + Node, με \texttt{uvicorn -{}-reload}
+          στο backend και \texttt{pnpm dev} (Vite dev server) στο
+          front-end. Hot module replacement, source maps, on-demand
+          transpilation. Κατάλληλο για ενεργή ανάπτυξη.
+\end{itemize}
+
+\textbf{Port conflict resilience.} Οι τρεις host ports
+(\texttt{FRONTEND\_PORT=5173}, \texttt{BACKEND\_PORT=8000},
+\texttt{MYSQL\_PORT=3306}) είναι παραμετροποιήσιμες μέσω
+\texttt{.env}. Το \texttt{scripts/setup.ps1} / \texttt{setup.sh}
+κάνει pre-flight έλεγχο και βγαίνει με ξεκάθαρο μήνυμα που
+ονομάζει την διεργασία που μπλοκάρει. Σε περίπτωση clash, ο
+χρήστης απλά αλλάζει την αντίστοιχη τιμή στο \texttt{.env}
+(π.χ. \texttt{FRONTEND\_PORT=5273}) και ξανατρέχει
+\texttt{docker compose up}.
+
+\section{Παρατηρήσιμες πηγές (τι μπορεί να δει ο εξεταστής)}
+
+Όλες οι αξιώσεις του παραπάνω πίνακα είναι ελέγξιμες:
+
+\begin{itemize}\setlength{\itemsep}{0.2em}
+    \item \textbf{Live app}: \texttt{http://localhost:5173}
+    \item \textbf{Swagger UI}: \texttt{http://localhost:8000/docs}
+    \item \textbf{ReDoc}: \texttt{http://localhost:8000/redoc}
+    \item \textbf{OpenAPI JSON} (live ή offline στο \texttt{docs/openapi.json})
+    \item \textbf{HTTP playbook}: \texttt{src/backend/api.http} με REST Client
+    \item \textbf{Backend tests}: \texttt{uv run pytest tests/ -q}
+    \item \textbf{Coverage HTML}: \texttt{uv run pytest -{}-cov -{}-cov-report=html}
+    \item \textbf{Frontend tests}: \texttt{pnpm test} / \texttt{pnpm test:coverage}
+    \item \textbf{E2E suite}: \texttt{pnpm exec playwright test}
+    \item \textbf{E2E HTML report}: \texttt{pnpm exec playwright show-report}
+    \item \textbf{Lint + types}: \texttt{uv run ruff check . \&\& uv run pyright}
+    \item \textbf{Database CLI}: \texttt{docker exec -it mye030\_mysql mysql -uroot -proot mye030}
+\end{itemize}
+
+\section{Επόμενα βήματα}
+
+\begin{itemize}
+    \item Cmd+K command palette για global search (deferred).
+    \item Project structure refactor σε
+          \texttt{features/} domain-driven slices (deferred).
+\end{itemize}
+
+\section{Αναφορές}
+
+\begin{itemize}
+    \item DBLP. \url{https://dblp.org/}
+    \item Kaggle Scimago journal ranking dataset.
+    \item iCore26 conference rankings. \url{http://portal.core.edu.au/conf-ranks/}
+    \item FastAPI documentation. \url{https://fastapi.tiangolo.com/}
+    \item Visx. \url{https://airbnb.io/visx/}
+    \item TanStack Router \& Query. \url{https://tanstack.com/}
+    \item asyncmy driver. \url{https://github.com/long2ice/asyncmy}
+\end{itemize}
